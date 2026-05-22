@@ -20,7 +20,7 @@
         .stage-fx-layer { position: absolute; width: 100%; height: 100%; top:0; left:0; pointer-events:none; z-index:3; }
         .ambient-glow { position: absolute; width: 120px; height: 120px; background: radial-gradient(circle, rgba(212,163,115,0.15) 0%, transparent 70%); top: -20px; left: 35%; animation: pulseGlow 3s infinite alternate; }
         .fly { position: absolute; width: 4px; height: 4px; background: #000; border-radius: 50%; opacity: 0.6; animation: flyMove 0.4s infinite alternate; }
-        .heart { position: absolute; color: #ff477e; font-size: 16px; text-shadow: 0 0 5px rgba(255,71,126,0.5); animation: heartUp 1.2s ease-out forwards; }
+        .heart { position: absolute; color: #ff477e; font-size: 16px; text-shadow: 0 0 5px rgba(255,71,126,0.5); animation: heartUp 1.2s ease-out forwards; pointer-events: none; }
         .ant { position: absolute; width: 5px; height: 3px; background: #1a0f08; border-radius: 2px; animation: antWalk 6s infinite linear; }
         .glow-drop { position: absolute; width: 8px; height: 8px; background: #39ff14; border-radius: 50%; box-shadow: 0 0 12px #39ff14; animation: chemicalDrop 1.2s infinite linear; }
         .crit-flash { position: absolute; top:0; left:0; width:100%; height:100%; background-color: white; opacity: 0; z-index: 100; pointer-events: none; }
@@ -52,12 +52,12 @@
         .stat-box h3 { margin: 0; font-size: 12px; color: #8c6239; letter-spacing: 0.5px; }
         .stat-box p { margin: 4px 0 0 0; font-size: 20px; font-weight: 900; color: #d4a373; text-shadow: 0 1px 0px white; }
         .action-section { text-align: center; margin-bottom: 10px; width: 100%; }
-        .main-btn { width: 100%; height: 75px; background: linear-gradient(135deg, #8c6239 0%, #5c3a21 100%); color: white; border: none; font-size: 21px; font-weight: bold; border-radius: 16px; cursor: pointer; box-shadow: 0 6px 15px rgba(92, 58, 33, 0.35), inset 0 2px 0px rgba(255,255,255,0.15); transition: all 0.1s; }
+        .main-btn { width: 100%; height: 75px; background: linear-gradient(135deg, #8c6239 0%, #5c3a21 100%); color: white; border: none; font-size: 21px; font-weight: bold; border-radius: 16px; cursor: pointer; box-shadow: 0 6px 15 rgba(92, 58, 33, 0.35), inset 0 2px 0px rgba(255,255,255,0.15); transition: all 0.1s; }
         .main-btn:active { transform: translateY(2px); box-shadow: 0 2px 5px rgba(92, 58, 33, 0.3); }
         #log-msg { text-align: center; color: #8c6a4e; font-weight: bold; height: 36px; margin-bottom: 8px; font-size: 11.5px; display: flex; align-items: center; justify-content: center; padding: 0 8px; }
         .tab-box { display: flex; gap: 6px; margin-bottom: 10px; }
-        .tab-btn { flex: 1; padding: 10px; background: #e6ccb2; color: #543321; border: none; font-size: 13px; font-weight: bold; border-radius: 8px; cursor: pointer; transition: background 0.2s; }
-        .tab-btn.active { background: #8c6239; color: white; box-shadow: 0 3px 6px rgba(0,0,0,0.1); }
+        .tab-box button { flex: 1; padding: 10px; background: #e6ccb2; color: #543321; border: none; font-size: 13px; font-weight: bold; border-radius: 8px; cursor: pointer; transition: background 0.2s; }
+        .tab-box button.active { background: #8c6239; color: white; box-shadow: 0 3px 6px rgba(0,0,0,0.1); }
         .upgrade-scroll-view { flex: 1; overflow-y: auto; padding: 0 12px 25px 12px; background-color: #faf8f5; border-top: 1px solid #ebdccb; min-height: 240px; }
         .panel-title { font-size: 13px; font-weight: bold; border-bottom: 2px solid #e8decb; padding-bottom: 4px; margin: 16px 0 8px 0; color: #543321; letter-spacing: 0.5px; }
         .upgrade-item { display: flex; justify-content: space-between; align-items: center; background: white; padding: 10px 14px; border-radius: 10px; margin-bottom: 8px; border: 1px solid #eedec9; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
@@ -198,7 +198,7 @@
 
 <script>
     // ⚠️【核心對接關鍵】請在此處置換您的 Google Apps Script 重新部署後的 URL（尾端要是 /exec）
-    const GAS_API_URL = "https://script.google.com/macros/s/AKfycby1mQF8c7GMzfgwOpYZkv-towo-Ish91LTyt8ziXWQDSjbjjq2JTnjP7mqqRv11gwALlg/exec";
+    const GAS_API_URL = "換成你的GAS網頁應用程式URL";
 
     let gameState = {
         money: 0, totalEarned: 0, 
@@ -302,244 +302,151 @@
         }
     }
 
+    // 補齊被截斷的關鍵計算法則與邏輯
     function calculateGPS() {
         if (activeEvent === "labor") return 0;
         let staffPower = gameState.staffCount * 1 * Math.pow(2, gameState.mintLevel);
         let baseGps = staffPower + (gameState.deliveryCount * 5) + (gameState.machineCount * 15) + (gameState.chickenCount * 35) + (gameState.managerCount * 120);
-        let globalMultiplier = Math.pow(2, gameState.shopLevel) * Math.pow(3, gameState.southLevel);
-        let cityBonus = 1;
-        if (gameState.currentCity === 'hsinchu') cityBonus += 0.20;
-        if (gameState.currentCity === 'tainan') cityBonus *= 2;
-        if (gameState.unlockedCities['kaohsiung'] === 1) globalMultiplier *= 3;
-        if (hualienStopMachine) baseGps -= (gameState.machineCount * 15);
         
-        let total = baseGps * globalMultiplier * cityBonus;
-        if(gameState.underAttack) total *= 0.20; 
-        return total;
+        let globalMultiplier = Math.pow(2, gameState.shopLevel) * Math.pow(1.5, gameState.southLevel);
+        
+        if (gameState.unlockedCities.hsinchu === 1) globalMultiplier *= 1.2;
+        if (gameState.currentCity === 'tainan') globalMultiplier *= 2.0;
+        if (gameState.unlockedCities.kaohsiung === 1) globalMultiplier *= 3.0;
+        if (gameState.underAttack) globalMultiplier *= 0.2; 
+        
+        let finalGps = baseGps * globalMultiplier;
+        if (eventDoubleBonusActive) finalGps *= 2;
+        if (hualienStopMachine) finalGps = 0;
+        
+        return Math.floor(finalGps);
     }
 
     function updateUI() {
         elMoney.innerText = formatMoney(gameState.money);
-        elGps.innerText = formatMoney(calculateGPS());
-        if(gameState.underAttack) {
-            elWarBanner.style.display = "block"; elCleanCostLbl.innerText = formatMoney(Math.max(gameState.money * 0.05, 500));
-        } else { elWarBanner.style.display = "none"; }
+        let currentGps = calculateGPS();
+        elGps.innerText = formatMoney(currentGps);
+        
+        if (gameState.underAttack) {
+            elWarBanner.style.display = "block";
+            let cost = Math.floor(gameState.totalEarned * 0.08) + 500;
+            elCleanCostLbl.innerText = formatMoney(cost);
+        } else {
+            elWarBanner.style.display = "none";
+        }
+        
+        updatePixelGraphics();
         renderTabContent();
     }
 
-    elClickBtn.addEventListener('click', () => { 
-        playAudio("bgm-music"); playAudio("se-click");
-        if(gameState.money >= 50000 && gameState.money < 1000000) {
-            let heart = document.createElement('div'); heart.className = 'heart'; heart.innerText = '❤️';
-            heart.style.left = Math.random()*80 + 10 + '%'; heart.style.top = '100px'; elFxLayer.appendChild(heart);
-            setTimeout(()=>heart.remove(), 1200);
-        }
-
-        let power = gameState.clickPower; let isCrit = false;
-        if(gameState.currentCity === 'hualien') power = Math.round(power * 1.5);
-        if(eventDoubleBonusActive) power *= 2;
-        if(chickenCleanBonus) power = Math.round(power * 1.5);
-
-        if(gameState.currentCity === 'taichung' && Math.random() < 0.05) {
-            power *= 50; isCrit = true; showLog(`🔫 慶記暴擊！當街暴力搶奪對手資產 +$${formatMoney(power)}！！！`);
-        } else if(gameState.wallLevel > 0 && Math.random() < 0.10) {
-            power *= 10; isCrit = true; showLog(`💥 網美假牆發威！10倍暴擊爆賺 +$${formatMoney(power)}！！！`);
-        } else { showLog(`🧋 賣出化學珍奶，資產 +$${formatMoney(power)}！`); }
+    // 【幹！手動搖一杯】主按鈕點擊機制
+    elClickBtn.addEventListener('click', (e) => {
+        playAudio("se-click");
+        let gain = gameState.clickPower * (1 + gameState.recipeLevel * 0.5);
+        if (gameState.currentCity === 'hualien') gain *= 1.5;
         
-        gameState.money += power;
-        if(gameState.totalEarned === undefined) gameState.totalEarned = 0;
-        gameState.totalEarned += power; 
-        if(isCrit) { elFlashEffect.className = 'crit-flash'; void elFlashEffect.offsetWidth; elFlashEffect.className = 'crit-flash flash-active'; }
+        // 台中分店消波塊暴擊機制
+        if (gameState.currentCity === 'taichung' && Math.random() < 0.05) {
+            gain *= 50;
+            showLog("🔫 發生消波塊慶記暴擊！瞬間搶奪市場五十倍收益！");
+            triggerFlash();
+        }
+        
+        gameState.money += gain;
+        gameState.totalEarned += gain;
+        
+        createFlyHeart(e.clientX, e.clientY, `+$${Math.floor(gain)}`);
         updateUI();
     });
 
-    function executeChickenClean() {
-        let cost = Math.max(gameState.money * 0.05, 500);
-        if(gameState.money >= cost) {
-            gameState.money -= cost; gameState.underAttack = false; chickenCleanBonus = true;
-            showLog("🧧 輿論成功洗白！手動點擊威力限時翻倍！");
-            playAudio("se-upgrade"); updatePixelGraphics(); updateUI();
-            setTimeout(() => { chickenCleanBonus = false; }, 15000);
-        } else { alert("你窮到連發雞排洗白的錢都沒有！"); }
+    function triggerFlash() {
+        elFlashEffect.classList.add('flash-active');
+        setTimeout(() => elFlashEffect.classList.remove('flash-active'), 250);
     }
 
-    async function hitCompetitor(targetUser) {
-        if(!checkAttackPermission()) { alert("🔒 權限不足！必須解鎖「新竹分店」且「總資產達 20 萬」才能發動商戰記者！"); return; }
-        let cost = Math.floor(gameState.money * 0.10); if(cost < 1000) return;
-        if(!confirm(`確定要花費 10% 財產 ($${formatMoney(cost)}) 買通記者去弄【${targetUser}】嗎？`)) return;
-        gameState.money -= cost; showLog(`⏳ 正在秘密塞紅包給媒體記者爆料...`);
-        try {
-            const response = await fetch(GAS_API_URL, { 
-                method: "POST", 
-                mode: "cors",
-                headers: { "Content-Type": "text/plain;charset=utf-8" },
-                body: JSON.stringify({ action: "attack", username: gameState.username, password: gameState.password, target: targetUser }) 
-            });
-            const res = await response.json(); alert(res.msg);
-            if(res.success) { showLog(`🔫 爆料成功！【${targetUser}】慘遭蒼蠅風暴圍剿！`); }
-        } catch(e) { showLog("❌ 商戰連線失敗。"); }
-        updateUI();
+    function createFlyHeart(x, y, text) {
+        let heart = document.createElement('div');
+        heart.className = 'heart';
+        heart.innerText = text ? text : "🧋";
+        heart.style.left = (x ? x : window.innerWidth/2) + 'px';
+        heart.style.top = (y ? y - 30 : 200) + 'px';
+        document.body.appendChild(heart);
+        setTimeout(() => heart.remove(), 1200);
     }
 
-    setInterval(() => {
-        if(gameState.currentCity === 'hualien' && gameState.machineCount > 0 && !activeEvent) {
-            if(Math.random() < 0.25) {
-                hualienStopMachine = true; showLog("🌋 花蓮大地震！封口機被震歪緊急停工 3 秒！");
-                playAudio("se-alert"); updatePixelGraphics();
-                setTimeout(() => { hualienStopMachine = false; updatePixelGraphics(); }, 3000);
-            }
-        }
-    }, 9000);
-
-    setInterval(() => {
-        if (activeEvent || gameState.money < 6000) return;
-        if (Math.random() < 0.20) { if (Math.random() < 0.50) { triggerLaborEvent(); } else { triggerChemicalEvent(); } }
-    }, 30000);
-
-    function startEventTimer(onTimeout) {
-        eventTimerId = setInterval(() => {
-            eventTimeLeft--;
-            elEventTimer.innerText = eventTimeLeft;
-            if (eventTimeLeft <= 0) {
-                clearInterval(eventTimerId);
-                onTimeout();
-            }
-        }, 1000);
-    }
-
-    function triggerLaborEvent() {
-        activeEvent = "labor"; eventClicks = 0; eventTimeLeft = 10;
-        elEventTitle.innerText = "👮‍♂️ 突擊勞動檢查！"; elEventDesc.innerText = "超時加班被工會檢舉了！GPS已被強制斷電！快塞小紅包消災！";
-        elEventActionBtn.innerText = `🧧 塞紅包 (0/15)`; elEventTimer.innerText = eventTimeLeft; elEventBox.style.display = "flex";
-        playAudio("se-alert"); updatePixelGraphics();
-        startEventTimer(() => {
-            elEventBox.style.display = "none"; activeEvent = null;
-            let fine = Math.floor(gameState.money * 0.15); gameState.money -= fine;
-            showLog(`😭 勞檢失敗！遭重罰開單 $${formatMoney(fine)}！`); updatePixelGraphics(); updateUI();
-        });
-    }
-
-    function triggerChemicalEvent() {
-        activeEvent = "chemical"; eventClicks = 0; eventTimeLeft = 10;
-        elEventTitle.innerText = "🧪 工業過期化學特賣！"; elEventDesc.innerText = "廉價過期高果糖糖漿大降價！瘋狂連點限時瘋狂加料賺翻！";
-        elEventActionBtn.innerText = `🧪 倒進桶子加爆 (0/12)！`; elEventTimer.innerText = eventTimeLeft; elEventBox.style.display = "flex";
-        playAudio("se-alert"); updatePixelGraphics();
-        startEventTimer(() => {
-            elEventBox.style.display = "none"; activeEvent = null;
-            showLog(`💨 倒太慢了！特賣化工材料被同業搶光了！`); updatePixelGraphics(); updateUI();
-        });
-    }
-
-    function handleEventClick() {
-        playAudio("se-click");
-        if(activeEvent === "labor") {
-            eventClicks++;
-            elEventActionBtn.innerText = `🧧 塞紅包 (${eventClicks}/15)`;
-            if(eventClicks >= 15) {
-                clearInterval(eventTimerId); elEventBox.style.display = "none"; activeEvent = null;
-                showLog("🤫 順利塞錢擺平！政府官員表示查無不法，繼續加班！"); updatePixelGraphics(); updateUI();
-            }
-        } else if(activeEvent === "chemical") {
-            eventClicks++;
-            elEventActionBtn.innerText = `🧪 倒進桶子加爆 (${eventClicks}/12)！`;
-            if(eventClicks >= 12) {
-                clearInterval(eventTimerId); elEventBox.style.display = "none"; activeEvent = null;
-                eventDoubleBonusActive = true; showLog("🧪 化學威力爆發！15 秒內手動點擊生產效益翻倍！");
-                updatePixelGraphics(); updateUI();
-                setTimeout(() => { eventDoubleBonusActive = false; showLog("🧪 化學材料消耗完畢，點擊恢復正常。"); }, 15000);
-            }
-        }
-    }
-
-    setInterval(() => {
-        let gps = calculateGPS();
-        if(gps > 0) {
-            gameState.money += (gps / 10);
-            if(gameState.totalEarned === undefined) gameState.totalEarned = 0;
-            gameState.totalEarned += (gps / 10);
-            elMoney.innerText = formatMoney(gameState.money);
-        }
-    }, 100);
-
+    // 分頁切換機制
     function switchTab(tab) {
         currentTab = tab;
-        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-        if(tab === 'upgrade') document.getElementById('tab-upgrade-btn').classList.add('active');
-        if(tab === 'map') document.getElementById('tab-map-btn').classList.add('active');
-        if(tab === 'rank') {
-            document.getElementById('tab-rank-btn').classList.add('active');
-            fetchLeaderboard();
-        }
+        document.getElementById('tab-upgrade-btn').classList.toggle('active', tab === 'upgrade');
+        document.getElementById('tab-map-btn').classList.toggle('active', tab === 'map');
+        document.getElementById('tab-rank-btn').classList.toggle('active', tab === 'rank');
         renderTabContent();
     }
 
     function renderTabContent() {
-        elScrollArea.innerHTML = "";
         if (currentTab === "upgrade") {
-            let html = `<div class="panel-title">🏪 基礎勞動力設備</div>`;
-            html += createUpgradeItem("聘請廉價工讀生", `被動每秒自動搖珍奶。目前: ${gameState.staffCount} 人`, gameState.staffCost, () => buyUpgrade('staff'));
-            html += createUpgradeItem("研發阿薩姆化工調味", `提升點擊獲得的資金。目前 LV: ${gameState.recipeLevel}`, gameState.recipeCost, () => buyUpgrade('recipe'));
-            
-            html += `<div class="panel-title">🚀 連鎖物流自動化</div>`;
-            html += createUpgradeItem("黑心外送車隊", "全自動全台瘋狂外送 (+5 GPS)", gameState.deliveryCost, () => buyUpgrade('delivery'));
-            html += createUpgradeItem("高速自動封口機", "德國進口頂級超頻封口 (+15 GPS)", gameState.machineCost, () => buyUpgrade('machine'));
-            html += createUpgradeItem("南部愛國大連鎖", "永久全台被動收入暴增 3 倍", gameState.southCost, () => buyUpgrade('south'));
-            
-            html += `<div class="panel-title">🧪 跨國生化企業化</div>`;
-            html += createUpgradeItem("薄荷葉毒性改良", "工讀生基礎工作效率翻倍", gameState.mintCost, () => buyUpgrade('mint'));
-            html += createUpgradeItem("香雞排聯合壟断", "強制全台點下午茶必須配珍奶 (+35 GPS)", gameState.chickenCost, () => buyUpgrade('chicken'));
-            html += createUpgradeItem("專業空殼美女經理", "超大增幅高階經營 (+120 GPS)", gameState.managerCost, () => buyUpgrade('manager'));
-            html += createUpgradeItem("旗艦生化科技總部", "永久全台被動收入暴增 2 倍", gameState.shopCost, () => buyUpgrade('shop'));
-            
-            html += `<div class="panel-title premium">✨ 網美奢華防護盾</div>`;
-            html += createUpgradeItem("防爆網美假卡打牆", "點擊 10% 機率爆發 10 倍財富暴擊", gameState.wallCost, () => buyUpgrade('wall'), true);
-            elScrollArea.innerHTML = html;
-        } 
-        else if (currentTab === "map") {
-            let html = `<div class="panel-title">🗺️ 插旗全台灣（點擊切換當前營運中心）</div><div class="map-grid">`;
-            for (let key in citiesConfig) {
-                let city = citiesConfig[key];
-                let isUnlocked = gameState.unlockedCities[key] === 1;
-                let isActive = gameState.currentCity === key;
-                let cardClass = `city-card ${!isUnlocked ? 'locked' : ''} ${isActive ? 'active' : ''}`;
+            elScrollArea.innerHTML = `
+                <div class="panel-title">🏪 勞力剝削及化工升級</div>
+                ${renderUpgradeItem("雇用外籍血汗工", `提升產能。數量: ${gameState.staffCount}`, gameState.staffCost, "buyStaff")}
+                ${renderUpgradeItem("進口黑心薄荷色素", `被動產能永久翻倍。等級: ${gameState.mintLevel}`, gameState.mintCost, "buyMint")}
+                ${renderUpgradeItem("研發過期毒奶粉配方", `點擊收益大幅上升。等級: ${gameState.recipeLevel}`, gameState.recipeCost, "buyRecipe")}
+                ${renderUpgradeItem("增設歐兜邁外送車隊", `每秒自動賺 +$5`, gameState.deliveryCost, "buyDelivery")}
+                ${renderUpgradeItem("引進二手高速果糖攪拌機", `每秒自動賺 +$15`, gameState.machineCost, "buyMachine")}
                 
-                let clickAction = `onclick="switchCity('${key}')"`;
-                let btnHtml = isUnlocked ? `<span class="status-tag">${isActive ? '營運中' : '點擊視察'}</span>` : `<button class="upgrade-btn" onclick="unlockCity('${key}', ${city.cost}, event)">🔓 解鎖 $${formatMoney(city.cost)}</button>`;
+                <div class="panel-title">💎 企業大型壟斷連鎖</div>
+                ${renderUpgradeItem("附設輻射毒雞排攤", `每秒自動賺 +$35`, gameState.chickenCost, "buyChicken")}
+                ${renderUpgradeItem("聘請無良高壓正職經理", `每秒自動賺 +$120`, gameState.managerCost, "buyManager")}
+                ${renderUpgradeItem("建立防記者反爆料圍牆", `防禦提升。等級: ${gameState.wallLevel}`, gameState.wallCost, "buyWall")}
+                ${renderUpgradeItem("全台黑心加盟大割韭菜", `全台被動翻倍。等級: ${gameState.shopLevel}`, gameState.shopCost, "buyShop")}
+                ${renderUpgradeItem("吞併南部糖廠地下供應鏈", `全台被動翻 1.5倍。等級: ${gameState.southLevel}`, gameState.southCost, "buySouth")}
+            `;
+        } else if (currentTab === "map") {
+            let html = `<div class="panel-title">🗺️ 插旗全台灣擴展商業地圖 (當前所在：${citiesConfig[gameState.currentCity].name})</div><div class="map-grid">`;
+            for (let id in citiesConfig) {
+                let city = citiesConfig[id];
+                let isUnlocked = gameState.unlockedCities[id] === 1;
+                let isActive = gameState.currentCity === id;
+                
+                let cardClass = "city-card";
+                if (!isUnlocked) cardClass += " locked";
+                if (isActive) cardClass += " active";
+                
+                let actionStr = isUnlocked ? (isActive ? "營運中" : "切換至此店") : `解除鎖定: $${formatMoney(city.cost)}`;
                 
                 html += `
-                    <div class="${cardClass}" ${isUnlocked ? clickAction : ''}>
+                    <div class="${cardClass}" onclick="handleCityClick('${id}')">
                         <div>
                             <h5>${city.name}</h5>
                             <p>${city.desc}</p>
                         </div>
-                        ${btnHtml}
-                    </div>`;
+                        <span class="status-tag">${actionStr}</span>
+                    </div>
+                `;
             }
             html += `</div>`;
             elScrollArea.innerHTML = html;
-        } 
-        else if (currentTab === "rank") {
+        } else if (currentTab === "rank") {
             let html = `
-                <div class="panel-title">🏆 全台頂級珍奶連鎖富豪榜</div>
+                <div class="panel-title">🏆 伺服器同步富豪商戰榜 (前15名)</div>
                 <table class="rank-table">
                     <thead>
-                        <tr><th>排名</th><th>店長大名</th><th>總資產</th><th>商戰反擊</th></tr>
+                        <tr><th>大亨名字</th><th>手頭資產</th><th>商業制裁</th></tr>
                     </thead>
-                    <tbody>`;
+                    <tbody>
+            `;
             if (globalLeaderboard.length === 0) {
-                html += `<tr><td colspan="4" style="text-align:center; color:#999;">暫無排行資料 (或您尚未登入)</td></tr>`;
+                html += `<tr><td colspan="3" style="text-align:center; color:#999;">暫無數據，請先點擊上方手動同步雲端</td></tr>`;
             } else {
-                globalLeaderboard.forEach((player, idx) => {
-                    let isSelf = player.username === gameState.username;
-                    let rowStyle = isSelf ? `style="background:#fff2cc; font-weight:bold;"` : '';
-                    let hitBtn = (isSelf || !checkAttackPermission()) ? '🔒' : `<button class="rank-hit-btn" onclick="hitCompetitor('${player.username}')">記者爆料</button>`;
-                    html += `
-                        <tr ${rowStyle}>
-                            <td>${idx + 1}</td>
-                            <td>${player.username} ${isSelf ? '(你)' : ''}</td>
-                            <td>$${formatMoney(player.money)}</td>
-                            <td>${hitBtn}</td>
-                        </tr>`;
+                globalLeaderboard.forEach(p => {
+                    let btnHtml = "";
+                    if (p.username !== gameState.username && checkAttackPermission()) {
+                        btnHtml = `<button class="rank-hit-btn" onclick="triggerServerAttack('${p.username}')">叫記者拍蒼蠅</button>`;
+                    } else if(p.username === gameState.username) {
+                        btnHtml = `<b style="color:#2a9d8f;">你自己</b>`;
+                    } else {
+                        btnHtml = `<span style="font-size:10px; color:#aaa;">條件不足</span>`;
+                    }
+                    html += `<tr><td>${p.username}</td><td>$${formatMoney(p.money)}</td><td>${btnHtml}</td></tr>`;
                 });
             }
             html += `</tbody></table>`;
@@ -547,167 +454,298 @@
         }
     }
 
-    function createUpgradeItem(title, desc, cost, clickFn, isPremium = false) {
-        let disabled = gameState.money < cost ? 'disabled' : '';
+    function renderUpgradeItem(name, desc, cost, action) {
+        let disabled = gameState.money < cost ? "disabled" : "";
+        let isPremium = cost >= 3500 ? "premium" : "";
         return `
-            <div class="upgrade-item ${isPremium ? 'premium' : ''}">
+            <div class="upgrade-item ${isPremium}">
                 <div class="upgrade-info">
-                    <h4>${title}</h4>
+                    <h4>${name}</h4>
                     <p>${desc}</p>
                 </div>
-                <button class="upgrade-btn" ${disabled} onclick="(${clickFn.toString()})()">💰 $${formatMoney(cost)}</button>
-            </div>`;
+                <button class="upgrade-btn" ${disabled} onclick="executeUpgrade('${action}', ${cost})">$${formatMoney(cost)}</button>
+            </div>
+        `;
     }
 
-    function buyUpgrade(type) {
+    function executeUpgrade(action, cost) {
+        if (gameState.money < cost) return;
+        gameState.money -= cost;
         playAudio("se-upgrade");
-        if (type === 'staff' && gameState.money >= gameState.staffCost) {
-            gameState.money -= gameState.staffCost; gameState.staffCount++; gameState.staffCost = Math.round(gameState.staffCost * 1.25);
-            gameState.clickPower = 1 + Math.floor(gameState.staffCount * 0.5);
-        } else if (type === 'recipe' && gameState.money >= gameState.recipeCost) {
-            gameState.money -= gameState.recipeCost; gameState.recipeLevel++; gameState.recipeCost = Math.round(gameState.recipeCost * 1.3);
-            gameState.clickPower += 3;
-        } else if (type === 'delivery' && gameState.money >= gameState.deliveryCost) {
-            gameState.money -= gameState.deliveryCost; gameState.deliveryCount++; gameState.deliveryCost = Math.round(gameState.deliveryCost * 1.25);
-        } else if (type === 'machine' && gameState.money >= gameState.machineCost) {
-            gameState.money -= gameState.machineCost; gameState.machineCount++; gameState.machineCost = Math.round(gameState.machineCost * 1.25);
-        } else if (type === 'south' && gameState.money >= gameState.southCost) {
-            gameState.money -= gameState.southCost; gameState.southLevel++; gameState.southCost = Math.round(gameState.southCost * 3.5);
-        } else if (type === 'mint' && gameState.money >= gameState.mintCost) {
-            gameState.money -= gameState.mintCost; gameState.mintLevel++; gameState.mintCost = Math.round(gameState.mintCost * 2.2);
-        } else if (type === 'chicken' && gameState.money >= gameState.chickenCost) {
-            gameState.money -= gameState.chickenCost; gameState.chickenCount++; gameState.chickenCost = Math.round(gameState.chickenCost * 1.25);
-        } else if (type === 'manager' && gameState.money >= gameState.managerCost) {
-            gameState.money -= gameState.managerCost; gameState.managerCount++; gameState.managerCost = Math.round(gameState.managerCost * 1.3);
-        } else if (type === 'shop' && gameState.money >= gameState.shopCost) {
-            gameState.money -= gameState.shopCost; gameState.shopLevel++; gameState.shopCost = Math.round(gameState.shopCost * 3.0);
-        } else if (type === 'wall' && gameState.money >= gameState.wallCost) {
-            gameState.money -= gameState.wallCost; gameState.wallLevel++; gameState.wallCost = Math.round(gameState.wallCost * 2.5);
-        }
-        updatePixelGraphics(); updateUI();
+        
+        if (action === "buyStaff") { gameState.staffCount++; gameState.staffCost = Math.floor(gameState.staffCost * 1.25); }
+        else if (action === "buyMint") { gameState.mintLevel++; gameState.mintCost = Math.floor(gameState.mintCost * 2.1); }
+        else if (action === "buyRecipe") { gameState.recipeLevel++; gameState.recipeCost = Math.floor(gameState.recipeCost * 1.5); gameState.clickPower += 2; }
+        else if (action === "buyDelivery") { gameState.deliveryCount++; gameState.deliveryCost = Math.floor(gameState.deliveryCost * 1.3); }
+        else if (action === "buyMachine") { gameState.machineCount++; gameState.machineCost = Math.floor(gameState.machineCost * 1.35); }
+        else if (action === "buyChicken") { gameState.chickenCount++; gameState.chickenCost = Math.floor(gameState.chickenCost * 1.4); }
+        else if (action === "buyManager") { gameState.managerCount++; gameState.managerCost = Math.floor(gameState.managerCost * 1.5); }
+        else if (action === "buyWall") { gameState.wallLevel++; gameState.wallCost = Math.floor(gameState.wallCost * 2.5); }
+        else if (action === "buyShop") { gameState.shopLevel++; gameState.shopCost = Math.floor(gameState.shopCost * 3.5); }
+        else if (action === "buySouth") { gameState.southLevel++; gameState.southCost = Math.floor(gameState.southCost * 3.0); }
+        
+        updateUI();
     }
 
-    function switchCity(cityKey) {
-        if(gameState.unlockedCities[cityKey] === 1) {
-            gameState.currentCity = cityKey;
-            showLog(`✈️ 巡視戰場：切換至【${citiesConfig[cityKey].name}】督導黑心生意！`);
-            updatePixelGraphics(); updateUI();
+    function handleCityClick(id) {
+        let city = citiesConfig[id];
+        if (gameState.unlockedCities[id] === 1) {
+            gameState.currentCity = id;
+            showLog(`🛰️ 總部指令：已將主力營運陣地轉移至【${city.name}】！`);
+        } else {
+            if (gameState.money >= city.cost) {
+                gameState.money -= city.cost;
+                gameState.unlockedCities[id] = 1;
+                gameState.currentCity = id;
+                showLog(`🎉 狂賀！大亨成功斥資解鎖【${city.name}】新店面！`);
+                playAudio("se-upgrade");
+            } else {
+                showLog(`❌ 資金不足！要插旗${city.name}還差 $${formatMoney(city.cost - gameState.money)}！`);
+            }
         }
+        updateUI();
     }
 
-    function unlockCity(cityKey, cost, event) {
-        event.stopPropagation();
+    // 🧧 發雞排洗白機制
+    function executeChickenClean() {
+        let cost = Math.floor(gameState.totalEarned * 0.08) + 500;
         if (gameState.money >= cost) {
             gameState.money -= cost;
-            gameState.unlockedCities[cityKey] = 1;
-            gameState.currentCity = cityKey;
-            showLog(`🎉 狂賀！成功解鎖並插旗【${citiesConfig[cityKey].name}】市場！`);
-            playAudio("se-upgrade"); updatePixelGraphics(); updateUI();
-        } else { alert("資金不足，你連地方黑道跟租金都擺不平！"); }
+            gameState.underAttack = false;
+            showLog("🧧 狂發雞排大成功！網軍與媒體全面洗白，產線回復正常！");
+            updateUI();
+            triggerManualSave(); 
+        } else {
+            showLog("❌ 連雞排錢都付不出，只能眼睜睜看記者繼續拍蒼蠅！");
+        }
     }
 
-    // --- 📥 最新修正：CORS 高相容性雲端傳輸模式 ---
+    // 後端 API 對接異步核心機制 (發送請求至 GAS)
+    async function sendToBackend(payload) {
+        if (!GAS_API_URL || GAS_API_URL.includes("換成你的")) {
+            showLog("⚠️ 未配置有效後端 GAS_API_URL，目前處於本機單機營運狀態。");
+            return null;
+        }
+        try {
+            let res = await fetch(GAS_API_URL, {
+                method: "POST",
+                body: JSON.stringify(payload),
+                headers: { "Content-Type": "text/plain;charset=utf-8" }
+            });
+            return await res.json();
+        } catch (err) {
+            console.error(err);
+            showLog("📡 總部連線阻礙：後端網路通道超時或拒絕連線。");
+            return null;
+        }
+    }
+
     async function handleAuth(action) {
-        let user = document.getElementById('auth-user').value.trim();
-        let pass = document.getElementById('auth-pass').value.trim();
-        if(!user || !pass) { alert("請輸入完整的帝國帳號與密碼！"); return; }
+        let u = document.getElementById('auth-user').value.trim();
+        let p = document.getElementById('auth-pass').value.trim();
+        if (!u || !p) { alert("帳密不可為空！"); return; }
         
-        showLog(`⏳ 正在聯絡手搖飲地下總部...`);
-        try {
-            const response = await fetch(GAS_API_URL, { 
-                method: "POST", 
-                mode: "cors",
-                headers: { "Content-Type": "text/plain;charset=utf-8" },
-                body: JSON.stringify({ action: action, username: user, password: pass }) 
-            });
-            const res = await response.json();
-            alert(res.msg);
-            if(res.success && action === "login") {
-                gameState.username = user; gameState.password = pass;
-                if(res.saveData && res.saveData.money !== undefined) {
-                    gameState = { ...gameState, ...res.saveData };
-                }
-                localStorage.setItem('bubble_tycoon_user_save', JSON.stringify(gameState));
-                onLoginSuccess();
+        showLog("🛰️ 正在與雲端商業總部進行安全憑證核對...");
+        let res = await sendToBackend({ action: action, username: u, password: p });
+        
+        if (res && res.success) {
+            gameState.username = u;
+            gameState.password = p;
+            if (res.saveData) {
+                // 將後端回傳的存檔數據洗入本機暫存
+                for (let k in res.saveData) { gameState[k] = res.saveData[k]; }
             }
-        } catch(e) { showLog("❌ 連線總部失敗，請確認你的 GAS Web App URL 是否填寫正確並已部署！"); }
-        updateUI(); updatePixelGraphics();
-    }
-
-    function onLoginSuccess() {
-        toggleAccountModal(false);
-        document.getElementById('btn-account-text').innerText = `帝國中心：${gameState.username}`;
-        document.getElementById('logged-status-lbl').style.display = "block";
-        document.getElementById('lbl-status-user').innerText = gameState.username;
-        document.getElementById('modal-logout-zone').style.display = "block";
-        fetchLeaderboard();
-    }
-
-    async function triggerManualSave() {
-        if(!gameState.username) { alert("💡 請先登入或註冊總部帳號，才能同步到雲端試算表喔！"); toggleAccountModal(true); return; }
-        showLog("💾 正在上傳雲端保全進度中...");
-        try {
-            const response = await fetch(GAS_API_URL, { 
-                method: "POST", 
-                mode: "cors",
-                headers: { "Content-Type": "text/plain;charset=utf-8" },
-                body: JSON.stringify({ action: "save", username: gameState.username, password: gameState.password, saveData: gameState }) 
-            });
-            const res = await response.json();
-            if(res.success) {
-                gameState.underAttack = res.underAttack;
-                globalLeaderboard = res.leaderboard || [];
-                showLog("✅ 雲端同步完成！商業帝國牢不可破！");
-                localStorage.setItem('bubble_tycoon_user_save', JSON.stringify(gameState));
-            }
-        } catch(e) { showLog("❌ 雲端備份失敗。"); }
-        updatePixelGraphics(); updateUI();
-    }
-
-    async function fetchLeaderboard() {
-        if(!gameState.username || GAS_API_URL.includes("換成你的")) return;
-        try {
-            const response = await fetch(GAS_API_URL, { 
-                method: "POST", 
-                mode: "cors",
-                headers: { "Content-Type": "text/plain;charset=utf-8" },
-                body: JSON.stringify({ action: "getLeaderboard", username: gameState.username, password: gameState.password }) 
-            });
-            const res = await response.json();
-            if(res.success) {
-                globalLeaderboard = res.leaderboard || [];
-                if(currentTab === 'rank') renderTabContent();
-            }
-        } catch(e) { console.error("抓取排行榜失敗", e); }
+            document.getElementById('btn-account-text').innerText = `店長：${u}`;
+            document.getElementById('logged-status-lbl').style.display = "block";
+            document.getElementById('lbl-status-user').innerText = u;
+            document.getElementById('modal-logout-zone').style.display = "block";
+            toggleAccountModal(false);
+            showLog(`🔓 驗證成功！大亨【${u}】商戰雲端主控台已就緒。`);
+            updateUI();
+        } else {
+            alert(res ? res.msg : "連線總部失敗");
+        }
     }
 
     function logout() {
-        if(confirm("確定要登出嗎？本地進度會保留。")) {
-            localStorage.removeItem('bubble_tycoon_user_save');
-            location.reload();
+        localStorage.clear();
+        location.reload();
+    }
+
+    async function triggerManualSave() {
+        if (!gameState.username) {
+            showLog("💡 請先完成「管理我的飲料帝國帳號」安全登入，才能儲存至雲端試算表。");
+            toggleAccountModal(true);
+            return;
+        }
+        showLog("💾 正在向雲端試算表中心加密上傳大亨資產狀態...");
+        let res = await sendToBackend({
+            action: "save",
+            username: gameState.username,
+            password: gameState.password,
+            saveData: gameState
+        });
+        
+        if (res && res.success) {
+            showLog("⚡ 雲端備份儲存完畢！即時富豪商戰榜已刷新。");
+            gameState.underAttack = res.underAttack;
+            if (res.leaderboard) globalLeaderboard = res.leaderboard;
+            updateUI();
+        } else {
+            showLog("❌ 備份失敗：" + (res ? res.msg : "伺服器未響應"));
+        }
+    }
+
+    async function triggerServerAttack(targetName) {
+        if (!gameState.username) { alert("請先登入帳號再發動商戰！"); return; }
+        if (!confirm(`確定要花費巨大社會資源，叫記者去黑【${targetName}】的珍奶有蒼蠅嗎？`)) return;
+        
+        showLog(`🔥 正在派遣特約記者包圍【${targetName}】...`);
+        let res = await sendToBackend({
+            action: "attack",
+            username: gameState.username,
+            password: gameState.password,
+            target: targetName
+        });
+        
+        if (res && res.success) {
+            alert(res.msg);
+            triggerManualSave();
+        } else {
+            alert(res ? res.msg : "制裁發動失敗");
         }
     }
 
     function resetLocalData() {
-        if(confirm("🚨 警告！這會清除本地所有資料！確定要重新投胎當窮光蛋嗎？")) {
-            localStorage.removeItem('bubble_tycoon_user_save');
+        if (confirm("老子真的不要這片江山了？重置將清除所有進度！")) {
+            localStorage.clear();
             location.reload();
         }
     }
 
-    setInterval(() => { if(gameState.username) triggerManualSave(); }, 60000);
+    // 🚨 隨機突發事件引擎系統
+    function triggerRandomEvent() {
+        if (activeEvent) return;
+        const events = [
+            { id: "labor", title: "🚨 勞檢部隊突襲", desc: "血汗工廠遭檢舉！員工集體罷工，主動產能歸零！需手動連搖 15 杯反擊！", actionName: "拼命搖杯度過難關" },
+            { id: "poison", title: "🧪 化工材料外洩", desc: "工業起雲劑翻倒！限時內沒處理完，手頭現金將直接暴扣 30%！", actionName: "立刻倒掉掩埋痕跡" },
+            { id: "double", title: "🔥 網紅爆紅業配", desc: "頂級奢華網紅開箱！全服限時營收原地暴增 200%！手動瘋狂灌水！", actionName: "趁機加水大賺一筆" }
+        ];
+        
+        activeEvent = events[Math.floor(Math.random() * events.length)];
+        eventClicks = 0;
+        eventTimeLeft = 10;
+        
+        elEventTitle.innerText = activeEvent.title;
+        elEventDesc.innerText = activeEvent.desc;
+        elEventActionBtn.innerText = activeEvent.actionName;
+        
+        elEventBox.style.display = "flex";
+        playAudio("se-alert");
+        
+        eventTimerId = setInterval(() => {
+            eventTimeLeft--;
+            elEventTimer.innerText = eventTimeLeft;
+            if (eventTimeLeft <= 0) {
+                resolveEvent(false);
+            }
+        }, 1000);
+    }
 
+    function handleEventClick() {
+        eventClicks++;
+        playAudio("se-click");
+        createFlyHeart(null, null, "⚡");
+        
+        if (activeEvent.id === "labor" && eventClicks >= 15) {
+            resolveEvent(true);
+        } else if (activeEvent.id === "poison" && eventClicks >= 10) {
+            resolveEvent(true);
+        } else if (activeEvent.id === "double") {
+            gameState.money += (gameState.clickPower * 5);
+            updateUI();
+            if (eventClicks >= 12) resolveEvent(true);
+        }
+    }
+
+    function resolveEvent(success) {
+        clearInterval(eventTimerId);
+        elEventBox.style.display = "none";
+        
+        if (activeEvent.id === "labor") {
+            showLog(success ? "🎉 成功掩蓋血汗事實，員工摸摸鼻子回去加班！" : "😭 被開罰黑心勞檢單，痛失一筆封口費！");
+            if (!success) gameState.money = Math.max(0, gameState.money - 300);
+        } else if (activeEvent.id === "poison") {
+            if (success) { showLog("🧪 成功毀屍滅跡！沒人發現化工飲料的秘密。"); }
+            else {
+                let loss = Math.floor(gameState.money * 0.3);
+                gameState.money -= loss;
+                showLog(`😭 遭告發毒害大眾！重罰扣除資產 $${formatMoney(loss)}！`);
+            }
+        } else if (activeEvent.id === "double") {
+            if (success) {
+                showLog("🔥 割韭菜大撈特撈！進入 15 秒賺大錢黃金期！");
+                eventDoubleBonusActive = true;
+                setTimeout(() => { eventDoubleBonusActive = false; updateUI(); }, 15000);
+            } else {
+                showLog("業配風頭過去了，營收歸於平淡。");
+            }
+        }
+        
+        activeEvent = null;
+        updateUI();
+    }
+
+    // 核心循環：每秒發放被動產能金
+    setInterval(() => {
+        // 花蓮大自然免費搖震歪停工機制
+        if (gameState.currentCity === "hualien" && Math.random() < 0.08 && !hualienStopMachine) {
+            hualienStopMachine = true;
+            showLog("🌋 花蓮發生大自然免費搖特大地震！全店機器歪斜，緊急停工 4 秒！");
+            updateUI();
+            setTimeout(() => { hualienStopMachine = false; updateUI(); }, 4000);
+        }
+
+        let gps = calculateGPS();
+        gameState.money += gps;
+        gameState.totalEarned += gps;
+        
+        // 自動存入瀏覽器 LocalStorage 防止單機進度遺失
+        localStorage.setItem("bubble_tycoon_v12.5_save", JSON.stringify(gameState));
+        
+        // 如果登入了，每 15 秒自動跟後端 GAS 排行榜同步一次
+        if (gameState.username && Math.random() < 0.07) {
+            triggerManualSave();
+        }
+        
+        updateUI();
+    }, 1000);
+
+    // 隨機事件定時器
+    setInterval(() => {
+        if (Math.random() < 0.15) triggerRandomEvent();
+    }, 10000);
+
+    // 網頁初始化載入
     window.onload = () => {
-        let localData = localStorage.getItem('bubble_tycoon_user_save');
-        if(localData) {
+        let localData = localStorage.getItem("bubble_tycoon_v12.5_save");
+        if (localData) {
             try {
                 let parsed = JSON.parse(localData);
-                gameState = { ...gameState, ...parsed };
-                if(gameState.username) onLoginSuccess();
+                for(let k in parsed) { gameState[k] = parsed[k]; }
+                if (gameState.username) {
+                    document.getElementById('btn-account-text').innerText = `店長：${gameState.username}`;
+                    document.getElementById('logged-status-lbl').style.display = "block";
+                    document.getElementById('lbl-status-user').innerText = gameState.username;
+                    document.getElementById('modal-logout-zone').style.display = "block";
+                }
             } catch(e) {}
         }
-        applySoundSettings(); updatePixelGraphics(); updateUI();
+        applySoundSettings();
+        updateUI();
+        showLog("🏪 帝國總部開張！請店長立刻壓榨員工生產毒珍奶！");
     };
 </script>
+
 </body>
 </html>

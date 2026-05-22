@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>珍奶大亨12.5 - 奢華帝國版</title>
+    <style>
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; }
+        body { background: linear-gradient(135deg, #1e140f 0%, #32221a 100%); color: #4a3f35; margin: 0; padding: 0; display: flex; justify-content: center; min-height: 100vh; overflow-x: hidden; }
+        .game-container { width: 100%; max-width: 480px; background: #fdfbf7; display: flex; flex-direction: column; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.5); border-left: 1px solid #4a3025; border-right: 1px solid #4a3025; }
+        .pixel-canvas { width: 100%; height: 180px; background: linear-gradient(to bottom, #2b1f1d 0%, #1a100e 70%, #3a251c 100%); border-bottom: 8px solid #23140f; position: relative; overflow: hidden; padding: 12px; display: flex; align-items: flex-end; justify-content: center; box-shadow: inset 0 -15px 30px rgba(0,0,0,0.8), inset 0 10px 20px rgba(255,255,255,0.05); }
+        .bar-counter { position: absolute; bottom: 0; left: 0; width: 100%; height: 35px; background: linear-gradient(to bottom, #8c583c 0%, #543321 30%, #301b10 100%); border-top: 3px solid #d4a373; z-index: 5; box-shadow: 0 -4px 10px rgba(0,0,0,0.5); }
+        .canvas-title { position: absolute; top: 12px; left: 12px; color: #ffebd6; font-size: 11px; font-weight: bold; letter-spacing: 1px; z-index: 10; background: rgba(35, 20, 15, 0.85); padding: 4px 10px; border-radius: 20px; border: 1px solid rgba(212, 163, 115, 0.3); box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+        .settings-gear-btn { position: absolute; top: 10px; right: 12px; background: rgba(255,255,255,0.15); color: #ffebd6; border: 1px solid rgba(255,255,255,0.25); font-size: 16px; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; z-index: 30; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); transition: all 0.2s; }
+        .settings-gear-btn:hover { background: rgba(255,255,255,0.3); transform: rotate(40deg); }
+        .staff-container { width: 90%; height: 100px; position: absolute; bottom: 15px; left: 5%; display: flex; justify-content: center; align-items: flex-end; gap: 10px; z-index: 6; }
+        .pixel-worker { width: 32px; height: 65px; position: relative; animation: luxuryShake 0.4s infinite ease-in-out alternate; }
+        .pixel-worker::before { content: ''; position: absolute; width: 4px; height: 4px; background: transparent; box-shadow: 3px 4px #4a3319, 4px 4px #4a3319, 5px 4px #4a3319, 2px 8px #4a3319, 3px 8px #ffd0a1, 4px 8px #ffd0a1, 5px 8px #ffd0a1, 6px 8px #4a3319, 3px 12px #111, 5px 12px #111, 4px 12px #ffd0a1, 2px 16px #ffd0a1, 3px 16px #ffd0a1, 4px 16px #ffd0a1, 5px 16px #ffd0a1, 6px 16px #ffd0a1, 3px 20px #e63946, 4px 20px #fff, 5px 20px #e63946, 2px 24px #332211, 3px 24px #b17a50, 4px 24px #b17a50, 5px 24px #b17a50, 6px 24px #332211, 1px 28px #332211, 2px 28px #b17a50, 3px 28px #b17a50, 4px 28px #b17a50, 5px 28px #b17a50, 6px 28px #b17a50, 7px 28px #332211, 2px 32px #b17a50, 3px 32px #b17a50, 4px 32px #b17a50, 5px 32px #b17a50, 6px 32px #b17a50, 2px 36px #222, 3px 36px #222, 5px 36px #222, 6px 36px #222, 2px 40px #111, 3px 40px #111, 5px 40px #111, 6px 40px #111; }
+        .pixel-worker::after { content: '🧋'; position: absolute; top: 20px; right: -8px; font-size: 12px; animation: shakerMove 0.2s infinite alternate; }
+        .stage-fx-layer { position: absolute; width: 100%; height: 100%; top:0; left:0; pointer-events:none; z-index:3; }
+        .ambient-glow { position: absolute; width: 120px; height: 120px; background: radial-gradient(circle, rgba(212,163,115,0.15) 0%, transparent 70%); top: -20px; left: 35%; animation: pulseGlow 3s infinite alternate; }
+        .fly { position: absolute; width: 4px; height: 4px; background: #000; border-radius: 50%; opacity: 0.6; animation: flyMove 0.4s infinite alternate; }
+        .heart { position: absolute; color: #ff477e; font-size: 16px; text-shadow: 0 0 5px rgba(255,71,126,0.5); animation: heartUp 1.2s ease-out forwards; }
+        .ant { position: absolute; width: 5px; height: 3px; background: #1a0f08; border-radius: 2px; animation: antWalk 6s infinite linear; }
+        .glow-drop { position: absolute; width: 8px; height: 8px; background: #39ff14; border-radius: 50%; box-shadow: 0 0 12px #39ff14; animation: chemicalDrop 1.2s infinite linear; }
+        .crit-flash { position: absolute; top:0; left:0; width:100%; height:100%; background-color: white; opacity: 0; z-index: 100; pointer-events: none; }
+        .flash-active { animation: flashAnim 0.25s ease-out; }
+        .war-alert-banner { background: #e63946; color: white; text-align: center; font-size: 12px; font-weight: bold; padding: 8px; display: none; box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+        .war-clean-btn { background: #ffb703; color: #23140f; border: none; padding: 4px 12px; font-size: 11px; font-weight: bold; border-radius: 20px; cursor: pointer; margin-left: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .control-panel { padding: 16px; background: white; z-index: 10; border-top-left-radius: 16px; border-top-right-radius: 16px; margin-top: -12px; position: relative; box-shadow: 0 -10px 20px rgba(0,0,0,0.05); }
+        h1 { text-align: center; color: #5c3a21; margin: 0; font-size: 24px; font-weight: 900; letter-spacing: 1px; }
+        .subtitle { text-align: center; color: #a67c52; margin: 4px 0 15px 0; font-size: 12px; font-weight: bold; letter-spacing: 0.5px; }
+        .account-hub-box { margin-bottom: 12px; }
+        .account-trigger-btn { width: 100%; height: 44px; background: linear-gradient(135deg, #b78453 0%, #8c583c 100%); color: white; border: 1px solid #70432c; border-radius: 10px; font-size: 14px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 8px rgba(140,88,60,0.25), inset 0 1px 2px rgba(255,255,255,0.2); transition: all 0.2s; }
+        .account-trigger-btn:active { transform: translateY(1px); box-shadow: 0 2px 4px rgba(140,88,60,0.2); }
+        .logged-status-text { color: #2a9d8f; font-weight: bold; font-size: 13px; text-align: center; margin-top: 4px; display: none; }
+        .universal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(26, 16, 14, 0.75); z-index: 1000; display: none; justify-content: center; align-items: center; backdrop-filter: blur(4px); }
+        .popup-modal { background: #fdfbf7; border-radius: 16px; width: 88%; max-width: 360px; padding: 24px; box-shadow: 0 15px 35px rgba(0,0,0,0.4); border: 2px solid #d4a373; animation: modalPop 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .popup-modal h3 { margin: 0 0 15px 0; color: #543321; text-align: center; font-size: 18px; font-weight: bold; }
+        .modal-input-group { margin-bottom: 14px; }
+        .modal-input-group label { display: block; font-size: 12px; color: #7a6655; font-weight: bold; margin-bottom: 4px; }
+        .modal-input-group input { width: 100%; padding: 10px; border: 2px solid #e1d3c1; border-radius: 8px; font-size: 14px; background: #fffdfa; color: #4a3f35; transition: border 0.2s; }
+        .modal-input-group input:focus { outline: none; border-color: #b78453; }
+        .modal-btn-row { display: flex; gap: 8px; margin-top: 18px; }
+        .modal-prime-btn { flex: 1; background: #2a9d8f; color: white; border: none; padding: 10px; font-size: 14px; font-weight: bold; border-radius: 8px; cursor: pointer; }
+        .modal-sec-btn { flex: 1; background: #8c583c; color: white; border: none; padding: 10px; font-size: 14px; font-weight: bold; border-radius: 8px; cursor: pointer; }
+        .modal-close-btn { width: 100%; background: #ae9783; color: white; border: none; padding: 8px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 12px; font-size: 12px; }
+        .save-action-box { display: flex; gap: 8px; margin-bottom: 12px; }
+        .save-btn { flex: 2; background-color: #2a9d8f; color: white; border: none; padding: 8px; font-size: 13px; font-weight: bold; border-radius: 8px; cursor: pointer; box-shadow: 0 2px 4px rgba(42,157,143,0.2); }
+        .reset-btn { flex: 1; background-color: #ae9783; color: white; border: none; padding: 8px; font-size: 11px; font-weight: bold; border-radius: 8px; cursor: pointer; }
+        .dashboard { background: linear-gradient(to bottom, #fffdfa, #f7f1e8); border: 2px solid #e8decb; border-radius: 12px; padding: 12px; display: flex; justify-content: space-around; text-align: center; margin-bottom: 12px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); }
+        .stat-box h3 { margin: 0; font-size: 12px; color: #8c6239; letter-spacing: 0.5px; }
+        .stat-box p { margin: 4px 0 0 0; font-size: 20px; font-weight: 900; color: #d4a373; text-shadow: 0 1px 0px white; }
+        .action-section { text-align: center; margin-bottom: 10px; width: 100%; }
+        .main-btn { width: 100%; height: 75px; background: linear-gradient(135deg, #8c6239 0%, #5c3a21 100%); color: white; border: none; font-size: 21px; font-weight: bold; border-radius: 16px; cursor: pointer; box-shadow: 0 6px 15px rgba(92, 58, 33, 0.35), inset 0 2px 0px rgba(255,255,255,0.15); transition: all 0.1s; }
+        .main-btn:active { transform: translateY(2px); box-shadow: 0 2px 5px rgba(92, 58, 33, 0.3); }
+        #log-msg { text-align: center; color: #8c6a4e; font-weight: bold; height: 36px; margin-bottom: 8px; font-size: 11.5px; display: flex; align-items: center; justify-content: center; padding: 0 8px; }
+        .tab-box { display: flex; gap: 6px; margin-bottom: 10px; }
+        .tab-btn { flex: 1; padding: 10px; background: #e6ccb2; color: #543321; border: none; font-size: 13px; font-weight: bold; border-radius: 8px; cursor: pointer; transition: background 0.2s; }
+        .tab-btn.active { background: #8c6239; color: white; box-shadow: 0 3px 6px rgba(0,0,0,0.1); }
+        .upgrade-scroll-view { flex: 1; overflow-y: auto; padding: 0 12px 25px 12px; background-color: #faf8f5; border-top: 1px solid #ebdccb; min-height: 240px; }
+        .panel-title { font-size: 13px; font-weight: bold; border-bottom: 2px solid #e8decb; padding-bottom: 4px; margin: 16px 0 8px 0; color: #543321; letter-spacing: 0.5px; }
+        .upgrade-item { display: flex; justify-content: space-between; align-items: center; background: white; padding: 10px 14px; border-radius: 10px; margin-bottom: 8px; border: 1px solid #eedec9; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+        .upgrade-info h4 { margin: 0; font-size: 13.5px; color: #3d2516; }
+        .upgrade-info p { margin: 3px 0 0 0; font-size: 11px; color: #8c7664; }
+        .premium { border: 1px solid #ffd0a1; background: #fffefb; }
+        .premium h4 { color: #b76e1f; font-weight: bold; }
+        .upgrade-btn { background-color: #e6ccb2; color: #4a3f35; border: none; height: 34px; min-width: 105px; font-size: 11px; font-weight: bold; border-radius: 6px; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .upgrade-btn:disabled { background-color: #e0e0e0; color: #a0a0a0; cursor: not-allowed; }
+        .map-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 6px; }
+        .city-card { background: white; border: 2px solid #ebdccb; border-radius: 12px; padding: 12px; text-align: center; display: flex; flex-direction: column; justify-content: space-between; cursor: pointer; min-height: 110px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .city-card.locked { background: #f0f0f0; opacity: 0.6; border-style: dashed; cursor: not-allowed; }
+        .city-card.active { border-color: #2a9d8f; background: #f4fbf9; box-shadow: 0 4px 8px rgba(42,157,143,0.1); }
+        .city-card h5 { margin: 0 0 3px 0; font-size: 14px; color: #3d2516; }
+        .city-card p { margin: 0 0 8px 0; font-size: 10.5px; color: #7a6655; line-height: 1.3; }
+        .city-card .status-tag { font-size: 10px; font-weight: bold; padding: 4px; border-radius: 6px; background: #e6ccb2; color: #543321;}
+        .city-card.active .status-tag { background: #2a9d8f; color: white; }
+        .rank-table { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 12.5px; }
+        .rank-table th { background: #8c583c; color: white; padding: 8px 6px; text-align: left; }
+        .rank-table td { padding: 10px 6px; border-bottom: 1px solid #eedec9; }
+        .rank-hit-btn { background: #e63946; color: white; border: none; padding: 3px 8px; font-size: 11px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .setting-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; font-size: 14px; color: #4a3f35; }
+        .setting-row input[type="checkbox"] { width: 20px; height: 20px; cursor: pointer; accent-color: #8c583c; }
+        .setting-row input[type="range"] { width: 55%; accent-color: #8c583c; }
+        .event-overlay { position: absolute; top:0; left:0; width:100%; height:180px; background: rgba(20,10,8,0.92); z-index: 50; display: none; flex-direction: column; justify-content: center; align-items: center; color: white; text-align: center; padding: 15px; }
+        .event-title { font-size: 16px; font-weight: bold; color: #ff3366; margin-bottom: 4px; text-shadow: 0 0 10px rgba(255,51,102,0.5); }
+        .event-btn { background: #ff3366; color: white; border: none; padding: 8px 18px; font-size: 13px; font-weight: bold; border-radius: 20px; margin-top: 8px; cursor: pointer; box-shadow: 0 4px 10px rgba(255,51,102,0.4); }
+        @keyframes luxuryShake { 0% { transform: translateY(0) scaleX(1); } 100% { transform: translateY(-4px) scaleX(0.98); } }
+        @keyframes shakerMove { 0% { transform: translate(0,0) rotate(0deg); } 100% { transform: translate(-3px, -3px) rotate(-15deg); } }
+        @keyframes pulseGlow { 0% { opacity: 0.4; } 100% { opacity: 1; } }
+        @keyframes modalPop { 0% { transform: scale(0.85); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        @keyframes flyMove { 0% { transform: translate(0,0); } 100% { transform: translate(4px, 4px); } }
+        @keyframes heartUp { 0% { transform: translateY(0) scale(0.7); opacity: 1; } 100% { transform: translateY(-50px) scale(1.3); opacity: 0; } }
+        @keyframes antWalk { 0% { left: -20px; } 100% { left: 500px; } }
+        @keyframes chemicalDrop { 0% { transform: translateY(-10px); opacity: 0; } 50% { opacity: 1; } 100% { transform: translateY(190px); opacity: 0; } }
+        @keyframes flashAnim { 0% { opacity: 0.6; } 100% { opacity: 0; } }
+        .emergency-alert { animation: redAlert 0.4s infinite alternate !important; }
+        @keyframes redAlert { 0% { background: #1a100e; } 100% { background: #7a0913; } }
+        .earthquake-shake { animation: quakeAnim 0.06s infinite alternate; }
+        @keyframes quakeAnim { 0% { transform: translate(2px,1px); } 100% { transform: translate(-2px,-1px); } }
+    </style>
+</head>
+<body>
+
+<div class="game-container">
+    <audio id="bgm-music" loop src="https://actions.google.com/sounds/v1/weather/rain_heavy_loud.ogg"></audio>
+    <audio id="se-click" src="https://actions.google.com/sounds/v1/foley/coins_drop_single.ogg"></audio>
+    <audio id="se-upgrade" src="https://actions.google.com/sounds/v1/transmissions/climb_down.ogg"></audio>
+    <audio id="se-alert" src="https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg"></audio>
+
+    <div class="pixel-canvas" id="canvas-bg">
+        <div class="canvas-title" id="canvas-title-text">⚙️ 正在校正頂級茶葉...</div>
+        <button class="settings-gear-btn" onclick="toggleSettingsModal(true)">⚙️</button>
+        <div class="crit-flash" id="flash-effect"></div>
+        <div class="stage-fx-layer" id="canvas-fx-layer"><div class="ambient-glow"></div></div>
+        
+        <div class="event-overlay" id="event-box">
+            <div class="event-title" id="event-title-text">🚨 突發狀況</div>
+            <div id="event-desc-text" style="font-size:12px; max-width:280px; margin-bottom:5px;">描述</div>
+            <button class="event-btn" id="event-action-btn" onclick="handleEventClick()">行動</button>
+            <div style="font-size:10px; margin-top:5px; color:#ffb703; font-weight:bold;">緊急倒數: <span id="event-timer">10</span> 秒</div>
+        </div>
+
+        <div class="staff-container" id="pixel-staff-box"></div>
+        <div class="bar-counter"></div>
+    </div>
+
+    <div class="war-alert-banner" id="war-banner">
+        ⚠️ 慘遭同行叫記者去拍蒼蠅！全台GPS暴跌 80%！
+        <button class="war-clean-btn" onclick="executeChickenClean()">🧧 發雞排洗白 ($<span id="clean-cost-lbl">0</span>)</button>
+    </div>
+
+    <div class="control-panel">
+        <h1>🧋 珍奶大亨 12.5</h1>
+        <div class="subtitle">老子才是老大，珍奶喝到爽爽叫</div>
+
+        <div class="account-hub-box">
+            <button class="account-trigger-btn" onclick="toggleAccountModal(true)">
+                👤 <span id="btn-account-text">管理我的飲料帝國帳號</span>
+            </button>
+            <div class="logged-status-text" id="logged-status-lbl">👤 目前登入身分：<span id="lbl-status-user">遊客</span></div>
+        </div>
+
+        <div class="save-action-box">
+            <button class="save-btn" id="manual-save-btn" onclick="triggerManualSave()">💾 手動同步至雲端</button>
+            <button class="reset-btn" onclick="resetLocalData()">重置進度</button>
+        </div>
+
+        <div class="dashboard">
+            <div class="stat-box"><h3>手頭現金</h3><p>$<span id="money">0</span></p></div>
+            <div class="stat-box"><h3>總GPS</h3><p>$<span id="gps">0</span></p></div>
+        </div>
+
+        <div id="log-msg">店長，準備好壓榨員工賺取黑心第一桶金了嗎？</div>
+        <div class="action-section"><button class="main-btn" id="click-btn">🧋幹！手動搖一杯啦</button></div>
+        
+        <div class="tab-box">
+            <button class="tab-btn active" id="tab-upgrade-btn" onclick="switchTab('upgrade')">🏪 割韭菜升級</button>
+            <button class="tab-btn" id="tab-map-btn" onclick="switchTab('map')">🗺️ 插旗全台灣</button>
+            <button class="tab-btn" id="tab-rank-btn" onclick="switchTab('rank')">🏆 全服富豪榜</button>
+        </div>
+    </div>
+
+    <div class="upgrade-scroll-view" id="scroll-content-area"></div>
+</div>
+
+<div class="universal-overlay" id="account-overlay-box">
+    <div class="popup-modal">
+        <h3>👤 總部帳號對接管理系統</h3>
+        <div class="modal-input-group">
+            <label>店長註冊帳號</label>
+            <input type="text" id="auth-user" placeholder="輸入英數帳號">
+        </div>
+        <div class="modal-input-group">
+            <label>資料防盜密碼</label>
+            <input type="password" id="auth-pass" placeholder="輸入登入密碼">
+        </div>
+        <div class="modal-btn-row">
+            <button class="modal-prime-btn" onclick="handleAuth('login')">安全登入</button>
+            <button class="modal-sec-btn" onclick="handleAuth('register')" style="background:#6c757d;">建立新帳號</button>
+        </div>
+        <div id="modal-logout-zone" style="display:none; text-align:center; margin-top:15px; border-top:1px solid #eedec9; padding-top:10px;">
+            <button class="modal-prime-btn" onclick="logout()" style="background:#e63946; width:100%;">🚪 登出目前店長身分</button>
+        </div>
+        <button class="modal-close-btn" onclick="toggleAccountModal(false)">關閉視窗</button>
+    </div>
+</div>
+
+<div class="universal-overlay" id="settings-overlay-box">
+    <div class="popup-modal">
+        <h3>⚙️ 總部大亨聲音設定面板</h3>
+        <div class="setting-row"><span>開啟背景音樂 (BGM)</span><input type="checkbox" id="chk-bgm" checked onchange="applySoundSettings()"></div>
+        <div class="setting-row"><span>開啟遊戲音效 (SE)</span><input type="checkbox" id="chk-se" checked onchange="applySoundSettings()"></div>
+        <div class="setting-row"><span>主音量調節</span><input type="range" id="rng-volume" min="0" max="100" value="50" oninput="applySoundSettings()"></div>
+        <button class="modal-close-btn" onclick="toggleSettingsModal(false)">儲存並重返戰場</button>
+    </div>
+</div>
+
+<script>
+    // ⚠️ 請在此處置換您的 Google Apps Script 後端 URL（尾端要是 /exec）
+    const GAS_API_URL = "https://script.google.com/macros/s/AKfycby1mQF8c7GMzfgwOpYZkv-towo-Ish91LTyt8ziXWQDSjbjjq2JTnjP7mqqRv11gwALlg/exec";
+
+    let gameState = {
+        money: 0, totalEarned: 0, 
+        clickPower: 1, staffCount: 0, staffCost: 15, mintLevel: 0, mintCost: 80,
+        recipeLevel: 0, recipeCost: 50, deliveryCount: 0, deliveryCost: 500, machineCount: 0, machineCost: 1200,
+        chickenCount: 0, chickenCost: 3500, managerCount: 0, managerCost: 12000, wallLevel: 0, wallCost: 15000,
+        shopLevel: 0, shopCost: 40000, southLevel: 0, southCost: 15000,
+        username: "", password: "", currentCity: "taipei",
+        unlockedCities: { taipei: 1, hsinchu: 0, taichung: 0, tainan: 0, hualien: 0, kaohsiung: 0 },
+        underAttack: false 
+    };
+
+    const citiesConfig = {
+        taipei: { name: "台北總店", cost: 0, desc: "【天龍高租金】高通膨基礎關卡，適合奠定黑心基業。", bg: "#2b1f1d" },
+        hsinchu: { name: "新竹分店", cost: 250000, desc: "【九降風加持 💨】狂風灌進店內！GPS 永久增加 20%。", bg: "#1a2e26" },
+        taichung: { name: "台中分店", cost: 2500000, desc: "【消波塊恐嚇流 🔫】點擊 5% 機率搶奪同業 50倍慶記暴擊金！", bg: "#25333a" },
+        tainan: { name: "台南分店", cost: 25000000, desc: "【全糖螞蟻重災區 🐜】甜度爆表！該店所有被動營收直接翻 2 倍！", bg: "#4a1930" },
+        hualien: { name: "花蓮分店", cost: 150000000, desc: "【大自然免費搖 🌋】點擊收益 +50%，但偶爾會震歪停工。", bg: "#222d1b" },
+        kaohsiung: { name: "高雄分店", cost: 1500000000, desc: "【暖心烈日 ☀️】大魔王關！全台灣總收入原地直接暴增 3 倍！", bg: "#4e2110" }
+    };
+
+    let currentTab = "upgrade"; let activeEvent = null; let eventClicks = 0; let eventTimeLeft = 10;
+    let eventTimerId = null; let eventDoubleBonusActive = false; let hualienStopMachine = false;
+    let soundConfig = { bgmEnabled: true, seEnabled: true, masterVolume: 0.5 };
+    let globalLeaderboard = []; let chickenCleanBonus = false;
+
+    function checkAttackPermission() { return (gameState.money >= 200000 && gameState.unlockedCities.hsinchu === 1); }
+
+    function formatMoney(num) {
+        num = Math.floor(num); if (num < 10000) return num.toString();
+        if (num < 100000000) return (num / 10000).toFixed(2) + " 萬";
+        return (num / 100000000).toFixed(2) + " 億";
+    }
+
+    function showLog(text) { elLog.innerText = text; }
+
+    const elMoney = document.getElementById('money'); const elGps = document.getElementById('gps'); const elLog = document.getElementById('log-msg');
+    const elClickBtn = document.getElementById('click-btn'); const elScrollArea = document.getElementById('scroll-content-area');
+    const elStaffBox = document.getElementById('pixel-staff-box'); const elCanvasBg = document.getElementById('canvas-bg');
+    const elCanvasTitle = document.getElementById('canvas-title-text'); const elFlashEffect = document.getElementById('flash-effect');
+    const elFxLayer = document.getElementById('canvas-fx-layer');
+    const elEventBox = document.getElementById('event-box'); const elEventTitle = document.getElementById('event-title-text');
+    const elEventDesc = document.getElementById('event-desc-text'); const elEventActionBtn = document.getElementById('event-action-btn');
+    const elEventTimer = document.getElementById('event-timer');
+    const elSettingsOverlay = document.getElementById('settings-overlay-box'); const elAccountOverlay = document.getElementById('account-overlay-box');
+    const elWarBanner = document.getElementById('war-banner'); const elCleanCostLbl = document.getElementById('clean-cost-lbl');
+
+    function playAudio(id) {
+        let audio = document.getElementById(id); if(!audio) return;
+        if (id === "bgm-music") {
+            if (soundConfig.bgmEnabled) { audio.volume = soundConfig.masterVolume * 0.4; if (audio.paused) audio.play().catch(()=>{}); }
+            else { audio.pause(); }
+        } else { if (soundConfig.seEnabled) { audio.volume = soundConfig.masterVolume; audio.currentTime = 0; audio.play().catch(()=>{}); } }
+    }
+
+    function toggleSettingsModal(show) { elSettingsOverlay.style.display = show ? "flex" : "none"; }
+    function toggleAccountModal(show) { elAccountOverlay.style.display = show ? "flex" : "none"; }
+    
+    function applySoundSettings() {
+        soundConfig.bgmEnabled = document.getElementById('chk-bgm').checked;
+        soundConfig.seEnabled = document.getElementById('chk-se').checked;
+        soundConfig.masterVolume = document.getElementById('rng-volume').value / 100;
+        playAudio("bgm-music");
+    }
+
+    function updatePixelGraphics() {
+        elFxLayer.innerHTML = '<div class="ambient-glow"></div>'; elStaffBox.innerHTML = '';
+        elCanvasBg.className = "pixel-canvas";
+        let m = gameState.money; let stageName = "";
+        
+        if(m < 50000) {
+            stageName = "🏪 新創路邊攤"; elCanvasBg.style.background = `linear-gradient(to bottom, ${citiesConfig[gameState.currentCity].bg} 0%, #111 100%)`;
+            for(let i=0; i<4; i++) {
+                let fly = document.createElement('div'); fly.className = 'fly';
+                fly.style.left = Math.random()*90 + '%'; fly.style.top = Math.random()*60 + 'px'; elFxLayer.appendChild(fly);
+            }
+        } else if(m < 1000000) {
+            stageName = "✨ 網美奢華文青店"; elCanvasBg.style.background = "linear-gradient(to bottom, #4e3526 0%, #1c100b 100%)";
+        } else if(m < 50000000) {
+            stageName = "🐜 全糖螞蟻重災帝國"; elCanvasBg.style.background = "linear-gradient(to bottom, #561937 0%, #15050e 100%)";
+            let ant = document.createElement('div'); ant.className = 'ant'; ant.style.top = '140px'; elFxLayer.appendChild(ant);
+        } else {
+            stageName = "🧪 賽博化工生化總部"; elCanvasBg.style.background = "linear-gradient(to bottom, #0f233a 0%, #030811 100%)";
+            for(let i=0; i<3; i++) {
+                let drop = document.createElement('div'); drop.className = 'glow-drop';
+                drop.style.left = Math.random()*90 + '%'; drop.style.animationDelay = (i*0.4)+'s'; elFxLayer.appendChild(drop);
+            }
+        }
+
+        if(gameState.underAttack) { elCanvasBg.classList.add('emergency-alert'); stageName = "💥 記者正在拍蒼蠅！"; }
+        if(gameState.currentCity === 'hualien' && hualienStopMachine) { elCanvasBg.classList.add('earthquake-shake'); }
+        elCanvasTitle.innerText = `⚙️ LIVE: ${citiesConfig[gameState.currentCity].name} [${stageName}]`;
+
+        if (!activeEvent || activeEvent !== "labor") {
+            let limit = Math.min(gameState.staffCount, 8);
+            for(let i=0; i<limit; i++) {
+                let worker = document.createElement('div'); worker.className = 'pixel-worker';
+                if(m >= 50000000) worker.style.filter = "hue-rotate(110deg) saturate(1.5)"; 
+                elStaffBox.appendChild(worker);
+            }
+        }
+    }
+
+    function calculateGPS() {
+        if (activeEvent === "labor") return 0;
+        let staffPower = gameState.staffCount * 1 * Math.pow(2, gameState.mintLevel);
+        let baseGps = staffPower + (gameState.deliveryCount * 5) + (gameState.machineCount * 15) + (gameState.chickenCount * 35) + (gameState.managerCount * 120);
+        let globalMultiplier = Math.pow(2, gameState.shopLevel) * Math.pow(3, gameState.southLevel);
+        let cityBonus = 1;
+        if (gameState.currentCity === 'hsinchu') cityBonus += 0.20;
+        if (gameState.currentCity === 'tainan') cityBonus *= 2;
+        if (gameState.unlockedCities['kaohsiung'] === 1) globalMultiplier *= 3;
+        if (hualienStopMachine) baseGps -= (gameState.machineCount * 15);
+        
+        let total = baseGps * globalMultiplier * cityBonus;
+        if(gameState.underAttack) total *= 0.20; 
+        return total;
+    }
+
+    function updateUI() {
+        elMoney.innerText = formatMoney(gameState.money);
+        elGps.innerText = formatMoney(calculateGPS());
+        if(gameState.underAttack) {
+            elWarBanner.style.display = "block"; elCleanCostLbl.innerText = formatMoney(Math.max(gameState.money * 0.05, 500));
+        } else { elWarBanner.style.display = "none"; }
+        renderTabContent();
+    }
+
+    elClickBtn.addEventListener('click', () => { 
+        playAudio("bgm-music"); playAudio("se-click");
+        if(gameState.money >= 50000 && gameState.money < 1000000) {
+            let heart = document.createElement('div'); heart.className = 'heart'; heart.innerText = '❤️';
+            heart.style.left = Math.random()*80 + 10 + '%'; heart.style.top = '100px'; elFxLayer.appendChild(heart);
+            setTimeout(()=>heart.remove(), 1200);
+        }
+
+        let power = gameState.clickPower; let isCrit = false;
+        if(gameState.currentCity === 'hualien') power = Math.round(power * 1.5);
+        if(eventDoubleBonusActive) power *= 2;
+        if(chickenCleanBonus) power = Math.round(power * 1.5);
+
+        if(gameState.currentCity === 'taichung' && Math.random() < 0.05) {
+            power *= 50; isCrit = true; showLog(`🔫 慶記暴擊！當街暴力搶奪對手資產 +$${formatMoney(power)}！！！`);
+        } else if(gameState.wallLevel > 0 && Math.random() < 0.10) {
+            power *= 10; isCrit = true; showLog(`💥 網美假牆發威！10倍暴擊爆賺 +$${formatMoney(power)}！！！`);
+        } else { showLog(`🧋 賣出化學珍奶，資產 +$${formatMoney(power)}！`); }
+        
+        gameState.money += power;
+        if(gameState.totalEarned === undefined) gameState.totalEarned = 0;
+        gameState.totalEarned += power; 
+        if(isCrit) { elFlashEffect.className = 'crit-flash'; void elFlashEffect.offsetWidth; elFlashEffect.className = 'crit-flash flash-active'; }
+        updateUI();
+    });
+
+    function executeChickenClean() {
+        let cost = Math.max(gameState.money * 0.05, 500);
+        if(gameState.money >= cost) {
+            gameState.money -= cost; gameState.underAttack = false; chickenCleanBonus = true;
+            showLog("🧧 輿論成功洗白！手動點擊威力限時翻倍！");
+            playAudio("se-upgrade"); updatePixelGraphics(); updateUI();
+            setTimeout(() => { chickenCleanBonus = false; }, 15000);
+        } else { alert("你窮到連發雞排洗白的錢都沒有！"); }
+    }
+
+    async function hitCompetitor(targetUser) {
+        if(!checkAttackPermission()) { alert("🔒 權限不足！必須解鎖「新竹分店」且「總資產達 20 萬」才能發動商戰記者！"); return; }
+        let cost = Math.floor(gameState.money * 0.10); if(cost < 1000) return;
+        if(!confirm(`確定要花費 10% 財產 ($${formatMoney(cost)}) 買通記者去弄【${targetUser}】嗎？`)) return;
+        gameState.money -= cost; showLog(`⏳ 正在秘密塞紅包給媒體記者爆料...`);
+        try {
+            const response = await fetch(GAS_API_URL, { method: "POST", body: JSON.stringify({ action: "attack", username: gameState.username, password: gameState.password, target: targetUser }) });
+            const res = await response.json(); alert(res.msg);
+            if(res.success) { showLog(`🔫 爆料成功！【${targetUser}】慘遭蒼蠅風暴圍剿！`); }
+        } catch(e) { showLog("❌ 商戰連線失敗。"); }
+        updateUI();
+    }
+
+    setInterval(() => {
+        if(gameState.currentCity === 'hualien' && gameState.machineCount > 0 && !activeEvent) {
+            if(Math.random() < 0.25) {
+                hualienStopMachine = true; showLog("🌋 花蓮大地震！封口機被震歪緊急停工 3 秒！");
+                playAudio("se-alert"); updatePixelGraphics();
+                setTimeout(() => { hualienStopMachine = false; updatePixelGraphics(); }, 3000);
+            }
+        }
+    }, 9000);
+
+    setInterval(() => {
+        if (activeEvent || gameState.money < 6000) return;
+        if (Math.random() < 0.20) { if (Math.random() < 0.50) { triggerLaborEvent(); } else { triggerChemicalEvent(); } }
+    }, 30000);
+
+    function startEventTimer(onTimeout) {
+        eventTimerId = setInterval(() => {
+            eventTimeLeft--;
+            elEventTimer.innerText = eventTimeLeft;
+            if (eventTimeLeft <= 0) {
+                clearInterval(eventTimerId);
+                onTimeout();
+            }
+        }, 1000);
+    }
+
+    function triggerLaborEvent() {
+        activeEvent = "labor"; eventClicks = 0; eventTimeLeft = 10;
+        elEventTitle.innerText = "👮‍♂️ 突擊勞動檢查！"; elEventDesc.innerText = "超時加班被工會檢舉了！GPS已被強制斷電！快塞小紅包消災！";
+        elEventActionBtn.innerText = `🧧 塞紅包 (0/15)`; elEventTimer.innerText = eventTimeLeft; elEventBox.style.display = "flex";
+        playAudio("se-alert"); updatePixelGraphics();
+        startEventTimer(() => {
+            elEventBox.style.display = "none"; activeEvent = null;
+            let fine = Math.floor(gameState.money * 0.15); gameState.money -= fine;
+            showLog(`😭 勞檢失敗！遭重罰開單 $${formatMoney(fine)}！`); updatePixelGraphics(); updateUI();
+        });
+    }
+
+    function triggerChemicalEvent() {
+        activeEvent = "chemical"; eventClicks = 0; eventTimeLeft = 10;
+        elEventTitle.innerText = "🧪 工業過期化學特賣！"; elEventDesc.innerText = "廉價過期高果糖糖漿大降價！瘋狂連點限時瘋狂加料賺翻！";
+        elEventActionBtn.innerText = `🧪 倒進桶子加爆 (0/12)！`; elEventTimer.innerText = eventTimeLeft; elEventBox.style.display = "flex";
+        playAudio("se-alert"); updatePixelGraphics();
+        startEventTimer(() => {
+            elEventBox.style.display = "none"; activeEvent = null;
+            showLog(`💨 倒太慢了！特賣化工材料被同業搶光了！`); updatePixelGraphics(); updateUI();
+        });
+    }
+
+    function handleEventClick() {
+        playAudio("se-click");
+        if(activeEvent === "labor") {
+            eventClicks++;
+            elEventActionBtn.innerText = `🧧 塞紅包 (${eventClicks}/15)`;
+            if(eventClicks >= 15) {
+                clearInterval(eventTimerId); elEventBox.style.display = "none"; activeEvent = null;
+                showLog("🤫 順利塞錢擺平！政府官員表示查無不法，繼續加班！"); updatePixelGraphics(); updateUI();
+            }
+        } else if(activeEvent === "chemical") {
+            eventClicks++;
+            elEventActionBtn.innerText = `🧪 倒進桶子加爆 (${eventClicks}/12)！`;
+            if(eventClicks >= 12) {
+                clearInterval(eventTimerId); elEventBox.style.display = "none"; activeEvent = null;
+                eventDoubleBonusActive = true; showLog("🧪 化學威力爆發！15 秒內手動點擊生產效益翻倍！");
+                updatePixelGraphics(); updateUI();
+                setTimeout(() => { eventDoubleBonusActive = false; showLog("🧪 化學材料消耗完畢，點擊恢復正常。"); }, 15000);
+            }
+        }
+    }
+
+    // --- 被動收益 (GPS) 動態時鐘 ---
+    setInterval(() => {
+        let gps = calculateGPS();
+        if(gps > 0) {
+            gameState.money += (gps / 10);
+            if(gameState.totalEarned === undefined) gameState.totalEarned = 0;
+            gameState.totalEarned += (gps / 10);
+            elMoney.innerText = formatMoney(gameState.money);
+        }
+    }, 100);
+
+    // --- 頁籤切換與動態畫面渲染 ---
+    function switchTab(tab) {
+        currentTab = tab;
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        if(tab === 'upgrade') document.getElementById('tab-upgrade-btn').classList.add('active');
+        if(tab === 'map') document.getElementById('tab-map-btn').classList.add('active');
+        if(tab === 'rank') {
+            document.getElementById('tab-rank-btn').classList.add('active');
+            fetchLeaderboard();
+        }
+        renderTabContent();
+    }
+
+    function renderTabContent() {
+        elScrollArea.innerHTML = "";
+        if (currentTab === "upgrade") {
+            let html = `<div class="panel-title">🏪 基礎勞動力設備</div>`;
+            html += createUpgradeItem("聘請廉價工讀生", `被動每秒自動搖珍奶。目前: ${gameState.staffCount} 人`, gameState.staffCost, () => buyUpgrade('staff'));
+            html += createUpgradeItem("研發阿薩姆化工調味", `提升點擊獲得的資金。目前 LV: ${gameState.recipeLevel}`, gameState.recipeCost, () => buyUpgrade('recipe'));
+            
+            html += `<div class="panel-title">🚀 連鎖物流自動化</div>`;
+            html += createUpgradeItem("黑心外送車隊", "全自動全台瘋狂外送 (+5 GPS)", gameState.deliveryCost, () => buyUpgrade('delivery'));
+            html += createUpgradeItem("高速自動封口機", "德國進口頂級超頻封口 (+15 GPS)", gameState.machineCost, () => buyUpgrade('machine'));
+            html += createUpgradeItem("南部愛國大連鎖", "永久全台被動收入暴增 3 倍", gameState.southCost, () => buyUpgrade('south'));
+            
+            html += `<div class="panel-title">🧪 跨國生化企業化</div>`;
+            html += createUpgradeItem("薄荷葉毒性改良", "工讀生基礎工作效率翻倍", gameState.mintCost, () => buyUpgrade('mint'));
+            html += createUpgradeItem("香雞排聯合壟断", "強制全台點下午茶必須配珍奶 (+35 GPS)", gameState.chickenCost, () => buyUpgrade('chicken'));
+            html += createUpgradeItem("專業空殼美女經理", "超大增幅高階經營 (+120 GPS)", gameState.managerCost, () => buyUpgrade('manager'));
+            html += createUpgradeItem("旗艦生化科技總部", "永久全台被動收入暴增 2 倍", gameState.shopCost, () => buyUpgrade('shop'));
+            
+            html += `<div class="panel-title premium">✨ 網美奢華防護盾</div>`;
+            html += createUpgradeItem("防爆網美假卡打牆", "點擊 10% 機率爆發 10 倍財富暴擊", gameState.wallCost, () => buyUpgrade('wall'), true);
+            elScrollArea.innerHTML = html;
+        } 
+        else if (currentTab === "map") {
+            let html = `<div class="panel-title">🗺️ 插旗全台灣（點擊切換當前營運中心）</div><div class="map-grid">`;
+            for (let key in citiesConfig) {
+                let city = citiesConfig[key];
+                let isUnlocked = gameState.unlockedCities[key] === 1;
+                let isActive = gameState.currentCity === key;
+                let cardClass = `city-card ${!isUnlocked ? 'locked' : ''} ${isActive ? 'active' : ''}`;
+                
+                let clickAction = `onclick="switchCity('${key}')"`;
+                let btnHtml = isUnlocked ? `<span class="status-tag">${isActive ? '營運中' : '點擊視察'}</span>` : `<button class="upgrade-btn" onclick="unlockCity('${key}', ${city.cost}, event)">🔓 解鎖 $${formatMoney(city.cost)}</button>`;
+                
+                html += `
+                    <div class="${cardClass}" ${isUnlocked ? clickAction : ''}>
+                        <div>
+                            <h5>${city.name}</h5>
+                            <p>${city.desc}</p>
+                        </div>
+                        ${btnHtml}
+                    </div>`;
+            }
+            html += `</div>`;
+            elScrollArea.innerHTML = html;
+        } 
+        else if (currentTab === "rank") {
+            let html = `
+                <div class="panel-title">🏆 全台頂級珍奶連鎖富豪榜</div>
+                <table class="rank-table">
+                    <thead>
+                        <tr><th>排名</th><th>店長大名</th><th>總資產</th><th>商戰反擊</th></tr>
+                    </thead>
+                    <tbody>`;
+            if (globalLeaderboard.length === 0) {
+                html += `<tr><td colspan="4" style="text-align:center; color:#999;">暫無排行資料 (或您尚未登入)</td></tr>`;
+            } else {
+                globalLeaderboard.forEach((player, idx) => {
+                    let isSelf = player.username === gameState.username;
+                    let rowStyle = isSelf ? `style="background:#fff2cc; font-weight:bold;"` : '';
+                    let hitBtn = (isSelf || !checkAttackPermission()) ? '🔒' : `<button class="rank-hit-btn" onclick="hitCompetitor('${player.username}')">記者爆料</button>`;
+                    html += `
+                        <tr ${rowStyle}>
+                            <td>${idx + 1}</td>
+                            <td>${player.username} ${isSelf ? '(你)' : ''}</td>
+                            <td>$${formatMoney(player.money)}</td>
+                            <td>${hitBtn}</td>
+                        </tr>`;
+                });
+            }
+            html += `</tbody></table>`;
+            elScrollArea.innerHTML = html;
+        }
+    }
+
+    function createUpgradeItem(title, desc, cost, clickFn, isPremium = false) {
+        let disabled = gameState.money < cost ? 'disabled' : '';
+        return `
+            <div class="upgrade-item ${isPremium ? 'premium' : ''}">
+                <div class="upgrade-info">
+                    <h4>${title}</h4>
+                    <p>${desc}</p>
+                </div>
+                <button class="upgrade-btn" ${disabled} onclick="(${clickFn.toString()})()">💰 $${formatMoney(cost)}</button>
+            </div>`;
+    }
+
+    function buyUpgrade(type) {
+        playAudio("se-upgrade");
+        if (type === 'staff' && gameState.money >= gameState.staffCost) {
+            gameState.money -= gameState.staffCost; gameState.staffCount++; gameState.staffCost = Math.round(gameState.staffCost * 1.25);
+            gameState.clickPower = 1 + Math.floor(gameState.staffCount * 0.5);
+        } else if (type === 'recipe' && gameState.money >= gameState.recipeCost) {
+            gameState.money -= gameState.recipeCost; gameState.recipeLevel++; gameState.recipeCost = Math.round(gameState.recipeCost * 1.3);
+            gameState.clickPower += 3;
+        } else if (type === 'delivery' && gameState.money >= gameState.deliveryCost) {
+            gameState.money -= gameState.deliveryCost; gameState.deliveryCount++; gameState.deliveryCost = Math.round(gameState.deliveryCost * 1.25);
+        } else if (type === 'machine' && gameState.money >= gameState.machineCost) {
+            gameState.money -= gameState.machineCost; gameState.machineCount++; gameState.machineCost = Math.round(gameState.machineCost * 1.25);
+        } else if (type === 'south' && gameState.money >= gameState.southCost) {
+            gameState.money -= gameState.southCost; gameState.southLevel++; gameState.southCost = Math.round(gameState.southCost * 3.5);
+        } else if (type === 'mint' && gameState.money >= gameState.mintCost) {
+            gameState.money -= gameState.mintCost; gameState.mintLevel++; gameState.mintCost = Math.round(gameState.mintCost * 2.2);
+        } else if (type === 'chicken' && gameState.money >= gameState.chickenCost) {
+            gameState.money -= gameState.chickenCost; gameState.chickenCount++; gameState.chickenCost = Math.round(gameState.chickenCost * 1.25);
+        } else if (type === 'manager' && gameState.money >= gameState.managerCost) {
+            gameState.money -= gameState.managerCost; gameState.managerCount++; gameState.managerCost = Math.round(gameState.managerCost * 1.3);
+        } else if (type === 'shop' && gameState.money >= gameState.shopCost) {
+            gameState.money -= gameState.shopCost; gameState.shopLevel++; gameState.shopCost = Math.round(gameState.shopCost * 3.0);
+        } else if (type === 'wall' && gameState.money >= gameState.wallCost) {
+            gameState.money -= gameState.wallCost; gameState.wallLevel++; gameState.wallCost = Math.round(gameState.wallCost * 2.5);
+        }
+        updatePixelGraphics(); updateUI();
+    }
+
+    function switchCity(cityKey) {
+        if(gameState.unlockedCities[cityKey] === 1) {
+            gameState.currentCity = cityKey;
+            showLog(`✈️ 巡視戰場：切換至【${citiesConfig[cityKey].name}】督導黑心生意！`);
+            updatePixelGraphics(); updateUI();
+        }
+    }
+
+    function unlockCity(cityKey, cost, event) {
+        event.stopPropagation();
+        if (gameState.money >= cost) {
+            gameState.money -= cost;
+            gameState.unlockedCities[cityKey] = 1;
+            gameState.currentCity = cityKey;
+            showLog(`🎉 狂賀！成功解鎖並插旗【${citiesConfig[cityKey].name}】市場！`);
+            playAudio("se-upgrade"); updatePixelGraphics(); updateUI();
+        } else { alert("資金不足，你連地方黑道跟租金都擺不平！"); }
+    }
+
+    // --- 雲端帳號與資料同步連線機制 (對接 GAS 後端) ---
+    async function handleAuth(action) {
+        let user = document.getElementById('auth-user').value.trim();
+        let pass = document.getElementById('auth-pass').value.trim();
+        if(!user || !pass) { alert("請輸入完整的帝國帳號與密碼！"); return; }
+        
+        showLog(`⏳ 正在聯絡手搖飲地下總部...`);
+        try {
+            const response = await fetch(GAS_API_URL, { method: "POST", body: JSON.stringify({ action: action, username: user, password: pass }) });
+            const res = await response.json();
+            alert(res.msg);
+            if(res.success && action === "login") {
+                gameState.username = user; gameState.password = pass;
+                if(res.saveData && res.saveData.money !== undefined) {
+                    gameState = { ...gameState, ...res.saveData };
+                }
+                localStorage.setItem('bubble_tycoon_user_save', JSON.stringify(gameState));
+                onLoginSuccess();
+            }
+        } catch(e) { showLog("❌ 連線總部失敗，請確認你的 GAS Web App URL 是否填寫正確！"); }
+        updateUI(); updatePixelGraphics();
+    }
+
+    function onLoginSuccess() {
+        toggleAccountModal(false);
+        document.getElementById('btn-account-text').innerText = `帝國中心：${gameState.username}`;
+        document.getElementById('logged-status-lbl').style.display = "block";
+        document.getElementById('lbl-status-user').innerText = gameState.username;
+        document.getElementById('modal-logout-zone').style.display = "block";
+        fetchLeaderboard();
+    }
+
+    async function triggerManualSave() {
+        if(!gameState.username) { alert("💡 請先點擊上方「管理我的飲料帝國帳號」安全登入，才能同步到雲端試算表喔！"); toggleAccountModal(true); return; }
+        showLog("💾 正在上傳雲端保全進度中...");
+        try {
+            const response = await fetch(GAS_API_URL, { method: "POST", body: JSON.stringify({ action: "save", username: gameState.username, password: gameState.password, saveData: gameState }) });
+            const res = await response.json();
+            if(res.success) {
+                gameState.underAttack = res.underAttack;
+                globalLeaderboard = res.leaderboard || [];
+                showLog("✅ 雲端同步完成！商業帝國牢不可破！");
+                localStorage.setItem('bubble_tycoon_user_save', JSON.stringify(gameState));
+            }
+        } catch(e) { showLog("❌ 雲端備份失敗。"); }
+        updatePixelGraphics(); updateUI();
+    }
+
+    async function fetchLeaderboard() {
+        if(!gameState.username || GAS_API_URL.includes("換成你的")) return;
+        try {
+            const response = await fetch(GAS_API_URL, { method: "POST", body: JSON.stringify({ action: "getLeaderboard", username: gameState.username, password: gameState.password }) });
+            const res = await response.json();
+            if(res.success) {
+                globalLeaderboard = res.leaderboard || [];
+                if(currentTab === 'rank') renderTabContent();
+            }
+        } catch(e) { console.error("抓取排行榜失敗", e); }
+    }
+
+    function logout() {
+        if(confirm("確定要登出並切換至遊客身分嗎？本地進度會保留。")) {
+            localStorage.removeItem('bubble_tycoon_user_save');
+            location.reload();
+        }
+    }
+
+    function resetLocalData() {
+        if(confirm("🚨 警告！這會清除本地所有資料！確定要重新投胎當窮光蛋嗎？")) {
+            localStorage.removeItem('bubble_tycoon_user_save');
+            location.reload();
+        }
+    }
+
+    // --- 自動定時雲端存檔 (每 60 秒) ---
+    setInterval(() => { if(gameState.username) triggerManualSave(); }, 60000);
+
+    // --- 遊戲初始化啟動 ---
+    window.onload = () => {
+        let localData = localStorage.getItem('bubble_tycoon_user_save');
+        if(localData) {
+            try {
+                let parsed = JSON.parse(localData);
+                gameState = { ...gameState, ...parsed };
+                if(gameState.username) onLoginSuccess();
+            } catch(e) {}
+        }
+        applySoundSettings(); updatePixelGraphics(); updateUI();
+    };
+</script>
+</body>
+</html>

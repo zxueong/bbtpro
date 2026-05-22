@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>珍奶大亨12.5 - 奢華帝國版</title>
+    <title>珍奶大亨12.5 - 奢華帝國雲端版</title>
     <style>
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; }
         body { background: linear-gradient(135deg, #1e140f 0%, #32221a 100%); color: #4a3f35; margin: 0; padding: 0; display: flex; justify-content: center; min-height: 100vh; overflow-x: hidden; }
@@ -197,7 +197,7 @@
 </div>
 
 <script>
-    // ⚠️ 請在此處置換您的 Google Apps Script 後端 URL（尾端要是 /exec）
+    // ⚠️【核心對接關鍵】請在此處置換您的 Google Apps Script 重新部署後的 URL（尾端要是 /exec）
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycby1mQF8c7GMzfgwOpYZkv-towo-Ish91LTyt8ziXWQDSjbjjq2JTnjP7mqqRv11gwALlg/exec";
 
     let gameState = {
@@ -369,7 +369,12 @@
         if(!confirm(`確定要花費 10% 財產 ($${formatMoney(cost)}) 買通記者去弄【${targetUser}】嗎？`)) return;
         gameState.money -= cost; showLog(`⏳ 正在秘密塞紅包給媒體記者爆料...`);
         try {
-            const response = await fetch(GAS_API_URL, { method: "POST", body: JSON.stringify({ action: "attack", username: gameState.username, password: gameState.password, target: targetUser }) });
+            const response = await fetch(GAS_API_URL, { 
+                method: "POST", 
+                mode: "cors",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify({ action: "attack", username: gameState.username, password: gameState.password, target: targetUser }) 
+            });
             const res = await response.json(); alert(res.msg);
             if(res.success) { showLog(`🔫 爆料成功！【${targetUser}】慘遭蒼蠅風暴圍剿！`); }
         } catch(e) { showLog("❌ 商戰連線失敗。"); }
@@ -446,7 +451,6 @@
         }
     }
 
-    // --- 被動收益 (GPS) 動態時鐘 ---
     setInterval(() => {
         let gps = calculateGPS();
         if(gps > 0) {
@@ -457,7 +461,6 @@
         }
     }, 100);
 
-    // --- 頁籤切換與動態畫面渲染 ---
     function switchTab(tab) {
         currentTab = tab;
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -603,7 +606,7 @@
         } else { alert("資金不足，你連地方黑道跟租金都擺不平！"); }
     }
 
-    // --- 雲端帳號與資料同步連線機制 (對接 GAS 後端) ---
+    // --- 📥 最新修正：CORS 高相容性雲端傳輸模式 ---
     async function handleAuth(action) {
         let user = document.getElementById('auth-user').value.trim();
         let pass = document.getElementById('auth-pass').value.trim();
@@ -611,7 +614,12 @@
         
         showLog(`⏳ 正在聯絡手搖飲地下總部...`);
         try {
-            const response = await fetch(GAS_API_URL, { method: "POST", body: JSON.stringify({ action: action, username: user, password: pass }) });
+            const response = await fetch(GAS_API_URL, { 
+                method: "POST", 
+                mode: "cors",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify({ action: action, username: user, password: pass }) 
+            });
             const res = await response.json();
             alert(res.msg);
             if(res.success && action === "login") {
@@ -622,7 +630,7 @@
                 localStorage.setItem('bubble_tycoon_user_save', JSON.stringify(gameState));
                 onLoginSuccess();
             }
-        } catch(e) { showLog("❌ 連線總部失敗，請確認你的 GAS Web App URL 是否填寫正確！"); }
+        } catch(e) { showLog("❌ 連線總部失敗，請確認你的 GAS Web App URL 是否填寫正確並已部署！"); }
         updateUI(); updatePixelGraphics();
     }
 
@@ -636,10 +644,15 @@
     }
 
     async function triggerManualSave() {
-        if(!gameState.username) { alert("💡 請先點擊上方「管理我的飲料帝國帳號」安全登入，才能同步到雲端試算表喔！"); toggleAccountModal(true); return; }
+        if(!gameState.username) { alert("💡 請先登入或註冊總部帳號，才能同步到雲端試算表喔！"); toggleAccountModal(true); return; }
         showLog("💾 正在上傳雲端保全進度中...");
         try {
-            const response = await fetch(GAS_API_URL, { method: "POST", body: JSON.stringify({ action: "save", username: gameState.username, password: gameState.password, saveData: gameState }) });
+            const response = await fetch(GAS_API_URL, { 
+                method: "POST", 
+                mode: "cors",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify({ action: "save", username: gameState.username, password: gameState.password, saveData: gameState }) 
+            });
             const res = await response.json();
             if(res.success) {
                 gameState.underAttack = res.underAttack;
@@ -654,7 +667,12 @@
     async function fetchLeaderboard() {
         if(!gameState.username || GAS_API_URL.includes("換成你的")) return;
         try {
-            const response = await fetch(GAS_API_URL, { method: "POST", body: JSON.stringify({ action: "getLeaderboard", username: gameState.username, password: gameState.password }) });
+            const response = await fetch(GAS_API_URL, { 
+                method: "POST", 
+                mode: "cors",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify({ action: "getLeaderboard", username: gameState.username, password: gameState.password }) 
+            });
             const res = await response.json();
             if(res.success) {
                 globalLeaderboard = res.leaderboard || [];
@@ -664,7 +682,7 @@
     }
 
     function logout() {
-        if(confirm("確定要登出並切換至遊客身分嗎？本地進度會保留。")) {
+        if(confirm("確定要登出嗎？本地進度會保留。")) {
             localStorage.removeItem('bubble_tycoon_user_save');
             location.reload();
         }
@@ -677,10 +695,8 @@
         }
     }
 
-    // --- 自動定時雲端存檔 (每 60 秒) ---
     setInterval(() => { if(gameState.username) triggerManualSave(); }, 60000);
 
-    // --- 遊戲初始化啟動 ---
     window.onload = () => {
         let localData = localStorage.getItem('bubble_tycoon_user_save');
         if(localData) {
